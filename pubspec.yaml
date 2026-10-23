@@ -1,0 +1,44 @@
+name: agriguide
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+
+
+environment:
+  sdk: ^3.13.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_markdown: ^0.7.7+1
+
+  # Flutter localization support.
+  flutter_localizations:
+    sdk: flutter
+
+  # Localization and formatting package.
+  intl: ^0.20.2
+
+  # Cupertino icons.
+  cupertino_icons: ^1.0.8
+  http: ^1.6.0
+  image_picker: ^1.2.3
+  geolocator: ^14.0.3
+  flutter_secure_storage: ^11.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Recommended Dart and Flutter lint rules.
+  flutter_lints: ^6.0.0
+
+flutter:
+
+  # Include Material Icons.
+  uses-material-design: true
+
+  # Enable automatic localization generation.
+  generate: true
