@@ -4,20 +4,13 @@ import '../services/api_service.dart';
 
 // ============================================================
 // AUTH SCREEN
-// ============================================================
-//
+
 // Handles:
 // - Login
 // - Registration
 // - Form validation
 // - Backend authentication
 // - Secure JWT session through ApiService
-//
-// After successful authentication:
-// Navigator.pop(context, true);
-//
-// The caller can then open the protected feature.
-// ============================================================
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -27,9 +20,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // ----------------------------------------------------------
   // FORM
-  // ----------------------------------------------------------
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -45,9 +36,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
-  // ----------------------------------------------------------
-  // UI STATE
-  // ----------------------------------------------------------
+// UI STATE
 
   bool isLoginMode = true;
   bool isLoading = false;
@@ -57,9 +46,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   String? errorMessage;
 
-  // ==========================================================
-  // CLEAN UP
-  // ==========================================================
+// CLEAN UP
 
   @override
   void dispose() {
@@ -71,9 +58,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // ==========================================================
-  // SWITCH LOGIN / REGISTER
-  // ==========================================================
+// SWITCH LOGIN / REGISTER
 
   void switchMode() {
     setState(() {
@@ -84,9 +69,7 @@ class _AuthScreenState extends State<AuthScreen> {
     formKey.currentState?.reset();
   }
 
-  // ==========================================================
-  // AUTHENTICATE
-  // ==========================================================
+// AUTHENTICATE
 
   Future<void> submit() async {
     FocusScope.of(context).unfocus();
@@ -102,18 +85,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (isLoginMode) {
-        // ----------------------------------------------------
         // LOGIN
-        // ----------------------------------------------------
 
         await ApiService.login(
           email: emailController.text.trim(),
           password: passwordController.text,
         );
       } else {
-        // ----------------------------------------------------
         // REGISTER
-        // ----------------------------------------------------
 
         await ApiService.register(
           fullName: nameController.text.trim(),
@@ -126,9 +105,7 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
 
-      // ------------------------------------------------------
       // AUTHENTICATION SUCCESSFUL
-      // ------------------------------------------------------
 
       Navigator.pop(context, true);
     } catch (error) {
@@ -151,9 +128,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  // ==========================================================
-  // ERROR MESSAGE
-  // ==========================================================
+// ERROR MESSAGE
 
   String _friendlyError(Object error) {
     final String message = error.toString();
@@ -191,9 +166,7 @@ class _AuthScreenState extends State<AuthScreen> {
         : 'Registration failed. Please check your details and try again.';
   }
 
-  // ==========================================================
   // BUILD
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -233,9 +206,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     CrossAxisAlignment.start,
 
                 children: [
-                  // ------------------------------------------------
                   // BRAND ICON
-                  // ------------------------------------------------
 
                   Center(
                     child: Container(
@@ -258,9 +229,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 22),
 
-                  // ------------------------------------------------
                   // TITLE
-                  // ------------------------------------------------
 
                   Center(
                     child: Text(
@@ -298,9 +267,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 28),
 
-                  // ------------------------------------------------
                   // ERROR MESSAGE
-                  // ------------------------------------------------
 
                   if (errorMessage != null) ...[
                     Container(
@@ -351,9 +318,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // ------------------------------------------------
                   // FULL NAME
-                  // ------------------------------------------------
 
                   if (!isLoginMode) ...[
                     buildField(
@@ -381,9 +346,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 14),
                   ],
 
-                  // ------------------------------------------------
                   // EMAIL
-                  // ------------------------------------------------
 
                   buildField(
                     controller: emailController,
@@ -416,9 +379,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 14),
 
-                  // ------------------------------------------------
                   // PASSWORD
-                  // ------------------------------------------------
 
                   buildField(
                     controller: passwordController,
@@ -464,9 +425,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     },
                   ),
 
-                  // ------------------------------------------------
                   // CONFIRM PASSWORD
-                  // ------------------------------------------------
 
                   if (!isLoginMode) ...[
                     const SizedBox(height: 14),
@@ -520,9 +479,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 24),
 
-                  // ------------------------------------------------
                   // SUBMIT BUTTON
-                  // ------------------------------------------------
 
                   SizedBox(
                     width: double.infinity,
@@ -600,9 +557,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 18),
 
-                  // ------------------------------------------------
                   // SWITCH MODE
-                  // ------------------------------------------------
 
                   Center(
                     child: Wrap(
@@ -657,9 +612,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                   const SizedBox(height: 16),
 
-                  // ------------------------------------------------
                   // SECURITY NOTE
-                  // ------------------------------------------------
 
                   Center(
                     child: Row(
@@ -697,9 +650,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  // ==========================================================
   // FORM FIELD
-  // ==========================================================
 
   Widget buildField({
     required TextEditingController controller,

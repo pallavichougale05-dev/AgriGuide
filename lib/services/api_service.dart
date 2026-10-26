@@ -924,6 +924,140 @@ static Future<void> deleteDiaryEntry(
 
     return '$fallback HTTP ${response.statusCode}';
   }
+
+      // ==========================================================
+  // FARMER EXPERIENCES
+  // ==========================================================
+
+  static Future<List<ExperienceModel>> getExperiences() async {
+    final Uri url = Uri.parse('$baseUrl/knowledge/experiences');
+
+    final http.Response response = await http.get(
+      url,
+      headers: await _getAuthorizedHeaders(),
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final List<dynamic> rawExperiences =
+          data['experiences'] as List<dynamic>;
+
+      return rawExperiences
+          .map(
+            (item) => ExperienceModel.fromJson(
+              item as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    }
+
+    throw Exception(
+      'Unable to load farmer experiences. '
+      'HTTP ${response.statusCode}',
+    );
+  }
+
+  static Future<void> shareExperience({
+    required String title,
+    required String topic,
+    required String content,
+    File? photo,
+  }) async {
+    final String? token = await getAccessToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw Exception('Please log in to share your experience.');
+    }
+
+    final Uri url = Uri.parse('$baseUrl/knowledge/experiences');
+
+    final http.MultipartRequest request =
+        http.MultipartRequest('POST', url);
+
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['title'] = title.trim();
+    request.fields['topic'] = topic.trim();
+    request.fields['content'] = content.trim();
+
+    if (photo != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('photo', photo.path),
+      );
+    }
+
+    final http.StreamedResponse streamedResponse =
+        await request.send().timeout(const Duration(seconds: 30));
+
+    final http.Response response =
+        await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    throw Exception(
+      'Unable to share experience. HTTP ${response.statusCode}: '
+      '${response.body}',
+    );
+  }
+
+  
+  // ============================================================
+  // DELETE FARMER EXPERIENCE
+  // DELETE /knowledge/experiences/{experience_id}
+  // ============================================================
+
+  static Future<void> deleteExperience(int experienceId) async {
+    final String? token = await getAccessToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw Exception('Please log in again to delete your experience.');
+    }
+
+    final Uri url = Uri.parse(
+      '$baseUrl/knowledge/experiences/$experienceId',
+    );
+
+    final http.Response response = await http.delete(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return;
+    }
+
+    if (response.statusCode == 401) {
+      throw Exception('Your session has expired. Please log in again.');
+    }
+
+    if (response.statusCode == 403) {
+      throw Exception('You can only delete your own experience.');
+    }
+
+    String message = 'Unable to delete experience. HTTP ${response.statusCode}';
+
+    try {
+      final Map<String, dynamic> data =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (data['detail'] != null) {
+        message = data['detail'].toString();
+      } else if (data['message'] != null) {
+        message = data['message'].toString();
+      }
+    } catch (_) {}
+
+    throw Exception(message);
+  }
+
 }
 
 
@@ -953,6 +1087,8 @@ class UserModel {
           json['email'] as String? ?? '',
     );
   }
+
+
 }
 
 
@@ -1060,6 +1196,7 @@ class CropRecommendation {
           (json['score'] as num).toDouble(),
     );
   }
+
 }
 
 
@@ -1514,6 +1651,45 @@ class DiaryEntryModel {
           json['activity'] as String? ?? '',
       notes:
           json['notes'] as String? ?? '',
+    );
+  }
+
+  
+}
+
+class ExperienceModel {
+  final int userId;
+  final int id;
+  final String title;
+  final String topic;
+  final String content;
+  final String authorName;
+  final String? photoUrl;
+  final DateTime createdAt;
+
+  const ExperienceModel({
+    required this.userId,
+    required this.id,
+    required this.title,
+    required this.topic,
+    required this.content,
+    required this.authorName,
+    this.photoUrl,
+    required this.createdAt,
+  });
+
+  factory ExperienceModel.fromJson(Map<String, dynamic> json) {
+    return ExperienceModel(
+      userId: (json['user_id'] as num?)?.toInt() ?? 0,
+      id: (json['id'] as num).toInt(),
+      title: json['title'] as String? ?? '',
+      topic: json['topic'] as String? ?? '',
+      content: json['content'] as String? ?? '',
+      authorName: json['author_name'] as String? ?? 'Farmer',
+      photoUrl: json['photo_url'] as String?,
+      createdAt: DateTime.parse(
+      json['created_at'] as String,
+      ),
     );
   }
 }
