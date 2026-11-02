@@ -1,5 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
+from translation_service import translate_text
 
 from fastapi import (
     APIRouter,
@@ -19,8 +20,29 @@ from routes.auth import get_current_user
 
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge Hub"])
+def localize_experience(item, lang: str):
+    title = item.title
+    topic = item.topic
+    content = item.content
 
+    if lang == "mr":
+        title = translate_text(title, "mr")
+        topic = translate_text(topic, "mr")
+        content = translate_text(content, "mr")
 
+    return {
+        "id": item.id,
+        "user_id": item.user_id,
+        "title": title,
+        "topic": topic,
+        "content": content,
+        "author_name": item.user.full_name if item.user else "Farmer",
+        "photo_url": item.photo_url,
+        "created_at": (
+            item.created_at.isoformat()
+            if item.created_at else None
+        ),
+    }
 # ============================================================
 # GET ALL KNOWLEDGE ARTICLES
 # GET /knowledge/articles
@@ -119,6 +141,64 @@ def get_articles_by_category(
         ],
     }
 
+# ============================================================
+# GET EXPERIENCES SHARED BY THE LOGGED-IN FARMER
+# GET /knowledge/my-experiences?lang=en or ?lang=mr
+# Requires JWT authentication.
+
+@router.get("/my-experiences")
+def get_my_experiences(
+    lang: str = "en",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if lang not in ["en", "mr"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Language must be 'en' or 'mr'.",
+        )
+
+    experiences = (
+        db.query(FarmerExperience)
+        .filter(FarmerExperience.user_id == current_user.id)
+        .order_by(FarmerExperience.created_at.desc())
+        .all()
+    )
+
+    localized_experiences = []
+
+    for item in experiences:
+        title = item.title
+        topic = item.topic
+        content = item.content
+
+        if lang == "mr":
+            title = translate_text(title, "mr")
+            topic = translate_text(topic, "mr")
+            content = translate_text(content, "mr")
+
+        localized_experiences.append({
+            "id": item.id,
+            "user_id": item.user_id,
+            "title": title,
+            "topic": topic,
+            "content": content,
+            "author_name": (
+                item.user.full_name if item.user else "Farmer"
+            ),
+            "photo_url": item.photo_url,
+            "created_at": (
+                item.created_at.isoformat()
+                if item.created_at else None
+            ),
+        })
+
+    return {
+        "success": True,
+        "count": len(localized_experiences),
+        "experiences": localized_experiences,
+    }
+
 
 # ============================================================
 # DELETE A FARMER EXPERIENCE POST
@@ -165,31 +245,53 @@ def delete_experience(
 # ============================================================
 # GET FARMER EXPERIENCE POSTS
 # GET /knowledge/experiences
-# ============================================================
 
 @router.get("/experiences")
-def get_experiences(db: Session = Depends(get_db)):
+def get_experiences(
+    lang: str = "en",
+    db: Session = Depends(get_db),
+):
+    if lang not in ["en", "mr"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Language must be 'en' or 'mr'.",
+        )
+
     experiences = (
         db.query(FarmerExperience)
         .order_by(FarmerExperience.created_at.desc())
         .all()
     )
 
+    localized_experiences = []
+
+    for item in experiences:
+        title = item.title
+        topic = item.topic
+        content = item.content
+
+        if lang == "mr":
+            title = translate_text(title, "mr")
+            topic = translate_text(topic, "mr")
+            content = translate_text(content, "mr")
+
+        localized_experiences.append({
+            "id": item.id,
+            "title": title,
+            "topic": topic,
+            "content": content,
+            "author_name": item.user.full_name if item.user else "Farmer",
+            "photo_url": item.photo_url,
+            "created_at": (
+                item.created_at.isoformat()
+                if item.created_at else None
+            ),
+        })
+
     return {
         "success": True,
-        "count": len(experiences),
-        "experiences": [
-            {
-                "id": item.id,
-                "title": item.title,
-                "topic": item.topic,
-                "content": item.content,
-                "author_name": item.user.full_name,
-                "photo_url": item.photo_url,
-                "created_at": item.created_at.isoformat(),
-            }
-            for item in experiences
-        ],
+        "count": len(localized_experiences),
+        "experiences": localized_experiences,
     }
 
 

@@ -195,7 +195,6 @@ $userText
 ''';
       }
       // SEND TO FASTAPI
-
       final String response =
           await ApiService.sendChatMessage(
         backendQuestion,
@@ -205,7 +204,6 @@ $userText
         return;
       }
       // ADD ASSISTANT RESPONSE
-
       setState(() {
         messages.add(
           ChatMessage(
@@ -242,7 +240,6 @@ $userText
   }
 
   // SCROLL TO BOTTOM
-
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {
@@ -263,7 +260,6 @@ $userText
   }
 
   // GET SUGGESTIONS
-
   List<String> getSuggestions() {
     final AppLocalizations l10n =
         AppLocalizations.of(context)!;
@@ -277,8 +273,6 @@ $userText
   }
 
   // CLEAN ASSISTANT RESPONSE
- 
-
   String cleanAssistantText(
     String text,
   ) {
@@ -320,9 +314,7 @@ $userText
       String cleanedLine =
           line.trimLeft();
 
-      // ------------------------------------------------------
       // Remove Markdown heading markers.
-      // ------------------------------------------------------
 
       if (cleanedLine.startsWith(
         '###### ',
@@ -356,9 +348,7 @@ $userText
             cleanedLine.substring(2);
       }
 
-      // ------------------------------------------------------
       // Convert Markdown bullet markers into real bullets.
-      // ------------------------------------------------------
 
       if (cleanedLine.startsWith('- ')) {
         cleanedLine =
@@ -378,9 +368,7 @@ $userText
 
     result = cleanedLines.join('\n');
 
-    // --------------------------------------------------------
     // Remove excessive blank lines.
-    // --------------------------------------------------------
 
     while (result.contains('\n\n\n')) {
       result = result.replaceAll(
@@ -393,9 +381,7 @@ $userText
   }
 
 
-  // ==========================================================
   // ASSISTANT RESPONSE
-  // ==========================================================
 
   Widget buildAssistantContent(
     String text,
@@ -414,9 +400,7 @@ $userText
   }
 
 
-  // ==========================================================
   // COPY ASSISTANT RESPONSE
-  // ==========================================================
 
   Future<void> copyAssistantResponse(
     String text,
@@ -448,16 +432,13 @@ $userText
   }
 
 
-  // ==========================================================
   // SCREEN UI
-  // ==========================================================
 
   @override
   Widget build(
     BuildContext context,
   ) {
-    // final AppLocalizations l10n =
-    //     AppLocalizations.of(context)!;
+    // final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor:
@@ -482,7 +463,7 @@ $userText
 
         title: Row(
           children: [
-            // ASSISTANT AVATAR
+            // ASSISTANT
 
             Container(
               width: 40,
@@ -585,16 +566,11 @@ $userText
       ),
 
 
-      // ======================================================
       // BODY
-      // ======================================================
-
       body: SafeArea(
         child: Column(
           children: [
-            // =================================================
             // CHAT LIST
-            // =================================================
 
             Expanded(
               child:
@@ -630,9 +606,7 @@ $userText
                             BuildContext context,
                             int index,
                           ) {
-                            // ------------------------------------
                             // SUGGESTIONS
-                            // ------------------------------------
 
                             if (messages.length ==
                                     1 &&
@@ -640,10 +614,7 @@ $userText
                               return buildSuggestions();
                             }
 
-
-                            // ------------------------------------
                             // TYPING INDICATOR
-                            // ------------------------------------
 
                             final int typingIndex =
                                 messages.length +
@@ -658,10 +629,7 @@ $userText
                               return buildTypingIndicator();
                             }
 
-
-                            // ------------------------------------
                             // MESSAGE INDEX
-                            // ------------------------------------
 
                             int messageIndex =
                                 index;
@@ -672,10 +640,7 @@ $userText
                               messageIndex--;
                             }
 
-
-                            // ------------------------------------
                             // SAFETY CHECK
-                            // ------------------------------------
 
                             if (messageIndex <
                                     0 ||
@@ -694,9 +659,7 @@ $userText
             ),
 
 
-            // =================================================
             // INPUT AREA
-            // =================================================
 
             buildMessageInput(),
           ],
@@ -705,10 +668,7 @@ $userText
     );
   }
 
-
-  // ==========================================================
   // EMPTY STATE
-  // ==========================================================
 
   Widget buildEmptyState() {
     return Center(
@@ -785,10 +745,7 @@ $userText
     );
   }
 
-
-  // ==========================================================
   // MESSAGE BUBBLE
-  // ==========================================================
 
   Widget buildMessageBubble(
     ChatMessage message,
@@ -975,9 +932,7 @@ $userText
             ),
 
 
-            // ------------------------------------------------
             // COPY ACTION FOR ASSISTANT
-            // ------------------------------------------------
 
             if (!isUser)
               Padding(
@@ -1047,9 +1002,7 @@ $userText
   }
 
 
-  // ==========================================================
   // SUGGESTED QUESTIONS
-  // ==========================================================
 
   Widget buildSuggestions() {
     final AppLocalizations l10n =
@@ -1217,10 +1170,7 @@ $userText
     );
   }
 
-
-  // ==========================================================
   // TYPING INDICATOR
-  // ==========================================================
 
   Widget buildTypingIndicator() {
     final AppLocalizations l10n =
@@ -1325,10 +1275,7 @@ $userText
     );
   }
 
-
-  // ==========================================================
   // MESSAGE INPUT
-  // ==========================================================
 
   Widget buildMessageInput() {
     final AppLocalizations l10n =
@@ -1370,9 +1317,7 @@ $userText
             CrossAxisAlignment.end,
 
         children: [
-          // ==================================================
           // TEXT FIELD
-          // ==================================================
 
           Expanded(
             child: Container(
@@ -1445,10 +1390,7 @@ $userText
             width: 8,
           ),
 
-
-          // ==================================================
           // SEND BUTTON
-          // ==================================================
 
           Semantics(
             button: true,

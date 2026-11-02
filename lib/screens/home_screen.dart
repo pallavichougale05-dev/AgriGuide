@@ -1581,10 +1581,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
 
-          // --------------------------------------------------
           // TIP INFORMATION
-          // --------------------------------------------------
-
           Expanded(
 
             child:
@@ -1667,23 +1664,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  // ==========================================================
   // BOTTOM NAVIGATION
-  // ==========================================================
 
   Widget buildBottomNavigation(
     AppLocalizations l10n,
   ) {
 
     return Container(
-
       decoration:
           const BoxDecoration(
-
         color:
             Colors.white,
-
         border:
             Border(
           top:
@@ -1699,10 +1690,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       child:
           SafeArea(
-
         child:
             Padding(
-
           padding:
               const EdgeInsets.fromLTRB(
             8,
@@ -1720,15 +1709,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
             children: [
 
-              // ------------------------------------------------
               // HOME
-              // ------------------------------------------------
-
               buildNavigationItem(
-
                 index:
                     0,
-
                 icon:
                     Icons.home_rounded,
 
@@ -1736,52 +1720,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     l10n.home,
               ),
 
-
-              // ------------------------------------------------
               // TOOLS
-              // ------------------------------------------------
-
               buildNavigationItem(
-
                 index:
                     1,
-
                 icon:
                     Icons.grid_view_rounded,
-
                 label:
                     l10n.tools,
               ),
 
-
-              // ------------------------------------------------
               // LEARN
-              // ------------------------------------------------
-
               buildNavigationItem(
-
                 index:
                     2,
-
                 icon:
                     Icons.menu_book_rounded,
-
                 label: l10n.knowledgeHub,
               ),
 
 
-              // ------------------------------------------------
               // DIARY
-              // ------------------------------------------------
-
               buildNavigationItem(
-
                 index:
                     3,
-
                 icon:
                     Icons.edit_note_rounded,
-
                 label: l10n.farmDiary,
               ),
             ],
@@ -1792,9 +1756,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  // ==========================================================
   // NAVIGATION ITEM
-  // ==========================================================
 
   Widget buildNavigationItem({
 

@@ -49,3 +49,4 @@ app.*.map.json
 
 # Environment variables / API keys
 backend/.env
+translation_env/

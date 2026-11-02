@@ -3,40 +3,6 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 
-// ============================================================
-// CROP RECOMMENDATION SCREEN
-// ============================================================
-//
-// PURPOSE:
-// Collect farm soil + weather conditions and send them to the
-// AgriGuide backend to receive the Top 5 crop recommendations.
-//
-// UI GOAL:
-// Make the screen feel like a real farmer-facing application:
-// - clean visual hierarchy
-// - compact data entry
-// - clear units
-// - strong primary action
-// - easy-to-read recommendation cards
-// - English / Marathi localization
-//
-// API FLOW:
-//
-// Farmer enters values
-//        ↓
-// Validation
-//        ↓
-// ApiService
-//        ↓
-// FastAPI /crop/recommend
-//        ↓
-// Crop recommendation model
-//        ↓
-// Top 5 recommendations
-//        ↓
-// Flutter UI
-// ============================================================
-
 class CropScreen extends StatefulWidget {
   const CropScreen({super.key});
 
@@ -44,17 +10,7 @@ class CropScreen extends StatefulWidget {
   State<CropScreen> createState() => _CropScreenState();
 }
 
-// ============================================================
 // ERROR TYPES
-// ============================================================
-//
-// Instead of storing the actual English error text, we store
-// the type of error.
-//
-// WHY?
-// This allows the same error to automatically appear in the
-// currently selected language.
-//
 
 enum CropErrorType {
   emptyFields,
@@ -63,14 +19,10 @@ enum CropErrorType {
   networkError,
 }
 
-// ============================================================
 // CROP SCREEN STATE
-// ============================================================
 
 class _CropScreenState extends State<CropScreen> {
-  // ==========================================================
   // INPUT CONTROLLERS
-  // ==========================================================
 
   final TextEditingController nitrogenController =
       TextEditingController();
@@ -93,19 +45,13 @@ class _CropScreenState extends State<CropScreen> {
   final TextEditingController rainfallController =
       TextEditingController();
 
-  // ==========================================================
   // API / UI STATE
-  // ==========================================================
 
   List<CropRecommendation> recommendations = [];
-
   bool isLoading = false;
-
   CropErrorType? errorType;
 
-  // ==========================================================
   // CLEAN UP
-  // ==========================================================
 
   @override
   void dispose() {
@@ -120,12 +66,7 @@ class _CropScreenState extends State<CropScreen> {
     super.dispose();
   }
 
-  // ==========================================================
   // ERROR MESSAGE
-  // ==========================================================
-  //
-  // Converts our internal error type into localized text.
-  //
 
   String _getErrorMessage(
     AppLocalizations l10n,
@@ -148,9 +89,7 @@ class _CropScreenState extends State<CropScreen> {
     }
   }
 
-  // ==========================================================
   // GET TOP 5 RECOMMENDATIONS
-  // ==========================================================
 
   Future<void> getRecommendations() async {
     // Prevent duplicate requests.
@@ -158,17 +97,13 @@ class _CropScreenState extends State<CropScreen> {
       return;
     }
 
-    // --------------------------------------------------------
     // VALIDATE EMPTY FIELDS
-    // --------------------------------------------------------
 
     if (!_validateFields()) {
       return;
     }
 
-    // --------------------------------------------------------
     // PARSE VALUES
-    // --------------------------------------------------------
 
     final double? nitrogen =
         double.tryParse(nitrogenController.text.trim());
@@ -191,9 +126,7 @@ class _CropScreenState extends State<CropScreen> {
     final double? rainfall =
         double.tryParse(rainfallController.text.trim());
 
-    // --------------------------------------------------------
     // NUMERIC VALIDATION
-    // --------------------------------------------------------
 
     if (nitrogen == null ||
         phosphorus == null ||
@@ -210,9 +143,7 @@ class _CropScreenState extends State<CropScreen> {
       return;
     }
 
-    // --------------------------------------------------------
     // START LOADING
-    // --------------------------------------------------------
 
     setState(() {
       recommendations = [];
@@ -221,12 +152,8 @@ class _CropScreenState extends State<CropScreen> {
     });
 
     try {
-      // ------------------------------------------------------
       // CALL BACKEND
-      // ------------------------------------------------------
-      //
       // ApiService handles the actual HTTP request.
-      //
 
       final List<CropRecommendation> result =
           await ApiService.recommendCrops(
@@ -243,9 +170,7 @@ class _CropScreenState extends State<CropScreen> {
         return;
       }
 
-      // ------------------------------------------------------
       // EMPTY RESULT
-      // ------------------------------------------------------
 
       if (result.isEmpty) {
         setState(() {
@@ -257,9 +182,7 @@ class _CropScreenState extends State<CropScreen> {
         return;
       }
 
-      // ------------------------------------------------------
       // STORE RESULT
-      // ------------------------------------------------------
 
       setState(() {
         recommendations = result;
@@ -280,21 +203,15 @@ class _CropScreenState extends State<CropScreen> {
     }
   }
 
-  // ==========================================================
   // SAFE POTASSIUM VALUE
-  // ==========================================================
-  //
   // This helper keeps the call readable while still allowing
   // normal decimal input.
-  //
 
   String kPotassiumText() {
     return potassiumController.text.trim();
   }
 
-  // ==========================================================
   // INPUT VALIDATION
-  // ==========================================================
 
   bool _validateFields() {
     final List<TextEditingController> fields = [
@@ -320,9 +237,7 @@ class _CropScreenState extends State<CropScreen> {
     return true;
   }
 
-  // ==========================================================
   // BUILD
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -332,10 +247,7 @@ class _CropScreenState extends State<CropScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8F2),
 
-      // ======================================================
-      // APP BAR
-      // ======================================================
-
+     // APP BAR
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F8F2),
         foregroundColor: const Color(0xFF20352A),
@@ -369,9 +281,7 @@ class _CropScreenState extends State<CropScreen> {
         ],
       ),
 
-      // ======================================================
       // CONTENT
-      // ======================================================
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -385,19 +295,15 @@ class _CropScreenState extends State<CropScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ------------------------------------------------
+
               // HERO CARD
-              // ------------------------------------------------
 
               buildHeroCard(l10n),
-
               const SizedBox(
                 height: 20,
               ),
 
-              // ------------------------------------------------
               // FARM CONDITIONS HEADER
-              // ------------------------------------------------
 
               Text(
                 l10n.farmConditions,
@@ -424,31 +330,23 @@ class _CropScreenState extends State<CropScreen> {
                 height: 14,
               ),
 
-              // ------------------------------------------------
               // INPUTS
-              // ------------------------------------------------
 
               buildInputGrid(l10n),
-
               const SizedBox(
                 height: 16,
               ),
 
-              // ------------------------------------------------
               // ERROR
-              // ------------------------------------------------
 
               if (errorType != null)
                 buildErrorCard(l10n),
-
               if (errorType != null)
                 const SizedBox(
                   height: 16,
                 ),
 
-              // ------------------------------------------------
               // RECOMMENDATIONS
-              // ------------------------------------------------
 
               if (recommendations.isNotEmpty)
                 buildRecommendations(l10n),
@@ -458,12 +356,9 @@ class _CropScreenState extends State<CropScreen> {
                   height: 18,
                 ),
 
-              // ------------------------------------------------
               // MAIN ACTION
-              // ------------------------------------------------
 
               buildRecommendationButton(l10n),
-
               const SizedBox(
                 height: 10,
               ),
@@ -486,9 +381,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // HERO CARD
-  // ==========================================================
 
   Widget buildHeroCard(
     AppLocalizations l10n,
@@ -512,9 +405,7 @@ class _CropScreenState extends State<CropScreen> {
       ),
       child: Row(
         children: [
-          // --------------------------------------------------
           // ICON
-          // --------------------------------------------------
 
           Container(
             width: 58,
@@ -536,9 +427,7 @@ class _CropScreenState extends State<CropScreen> {
             width: 14,
           ),
 
-          // --------------------------------------------------
           // TEXT
-          // --------------------------------------------------
 
           Expanded(
             child: Column(
@@ -576,14 +465,10 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // INPUT GRID
-  // ==========================================================
-  //
   // Uses two columns on normal phone-sized screens.
   // This significantly reduces scrolling compared with the
   // original seven full-width fields.
-  //
 
   Widget buildInputGrid(
     AppLocalizations l10n,
@@ -667,9 +552,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // INPUT FIELD
-  // ==========================================================
 
   Widget buildInputField({
     required TextEditingController controller,
@@ -753,9 +636,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // ERROR CARD
-  // ==========================================================
 
   Widget buildErrorCard(
     AppLocalizations l10n,
@@ -816,9 +697,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // RECOMMENDATIONS SECTION
-  // ==========================================================
 
   Widget buildRecommendations(
     AppLocalizations l10n,
@@ -899,9 +778,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // RECOMMENDATION CARD
-  // ==========================================================
 
   Widget buildRecommendationCard({
     required CropRecommendation recommendation,
@@ -942,9 +819,8 @@ class _CropScreenState extends State<CropScreen> {
       ),
       child: Column(
         children: [
-          // --------------------------------------------------
+
           // TOP ROW
-          // --------------------------------------------------
 
           Row(
             crossAxisAlignment:
@@ -1077,9 +953,7 @@ class _CropScreenState extends State<CropScreen> {
             height: 15,
           ),
 
-          // --------------------------------------------------
           // MATCH PROGRESS
-          // --------------------------------------------------
 
           ClipRRect(
             borderRadius:
@@ -1101,9 +975,7 @@ class _CropScreenState extends State<CropScreen> {
             height: 14,
           ),
 
-          // --------------------------------------------------
           // INFO STRIP
-          // --------------------------------------------------
 
           Container(
             width: double.infinity,
@@ -1149,9 +1021,7 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // ==========================================================
   // PRIMARY BUTTON
-  // ==========================================================
 
   Widget buildRecommendationButton(
     AppLocalizations l10n,

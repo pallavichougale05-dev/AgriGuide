@@ -9,8 +9,10 @@ class ApiTestScreen extends StatefulWidget {
 }
 
 class _ApiTestScreenState extends State<ApiTestScreen> {
+
   // Stores the response returned by the FastAPI server.
   String message = 'Press the button to test the API.';
+
 
   // Controls the loading state while the request is running.
   bool isLoading = false;
@@ -31,6 +33,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
         message = response;
       });
     } catch (error) {
+      
       // Displays an error if the connection fails.
       setState(() {
         message = 'Connection failed:\n$error';

@@ -6,26 +6,7 @@ import '../services/api_service.dart';
 import 'auth_screen.dart';
 import 'share_experience_screen.dart';
 
-// ============================================================
-// KNOWLEDGE HUB
-// The Knowledge Hub displays farmer experiences from the FastAPI backend.
-//
-// Share Experience flow:
-//
-//   Tap "Share Experience"
-//        |
-//   Logged in? --- No --> Login sheet --> AuthScreen --+
-//        |                                             |
-//       Yes                                  (login successful)
-//        |                                             |
-//        +--------------> Share Experience form <------+
-//                                  |
-//                      Submit -> FastAPI -> database
-//                                  |
-//                  Back to the Farmer Experiences list
-//                                  |
-//               Visible to all users - anyone can read it
-// ============================================================
+String? _lastLanguageCode;
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
@@ -34,7 +15,6 @@ class KnowledgeScreen extends StatefulWidget {
   State<KnowledgeScreen> createState() => _KnowledgeScreenState();
 }
 
-// ============================================================
 // KNOWLEDGE HUB STATE
 class _KnowledgeScreenState extends State<KnowledgeScreen> {
   final TextEditingController searchController = TextEditingController();
@@ -51,6 +31,25 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     loadCurrentUser();
   }
 
+
+  @override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+
+  final languageCode = Localizations.localeOf(context).languageCode;
+
+  if (_lastLanguageCode != languageCode) {
+    _lastLanguageCode = languageCode;
+
+    // Reload experiences using the newly selected language.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        loadExperiences();
+      }
+    });
+  }
+}
+
   Future<void> loadCurrentUser() async {
     final user = await ApiService.getSavedUser();
     if (!mounted) return;
@@ -60,7 +59,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     });
   }
 
-  // ==========================================================
   // LOAD EXPERIENCES FROM FASTAPI
   // GET /knowledge/experiences (public - no login needed)
 
@@ -71,8 +69,11 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     });
 
     try {
-      final List<ExperienceModel> result =
-          await ApiService.getExperiences();
+      final String languageCode =
+    Localizations.localeOf(context).languageCode;
+
+final List<ExperienceModel> result =
+    await ApiService.getExperiences(lang: languageCode);
 
       if (!mounted) {
         return;

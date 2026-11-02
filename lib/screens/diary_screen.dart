@@ -50,6 +50,41 @@ class DiaryScreen extends StatefulWidget {
 // ============================================================
 
 class _DiaryScreenState extends State<DiaryScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _activityHistoryKey = GlobalKey();
+  final GlobalKey _sharedExperiencesKey = GlobalKey();
+
+  Future<void> _scrollToSection(GlobalKey key) async {
+    final BuildContext? targetContext = key.currentContext;
+    if (targetContext == null) return;
+    await Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOut,
+      alignment: 0.03,
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  bool get _isMarathi =>
+      Localizations.localeOf(context).languageCode == 'mr';
+
+  // ----------------------------------------------------------
+  // LANGUAGE OF THE LIST CURRENTLY ON SCREEN
+  // ----------------------------------------------------------
+  //
+  // Remembers which language the shared experiences were last
+  // requested in, so the list can be reloaded when the user
+  // switches between English and Marathi.
+  // ----------------------------------------------------------
+
+  String? _loadedLang;
+
   // ----------------------------------------------------------
   // LOGIN STATE
   // ----------------------------------------------------------
@@ -62,34 +97,14 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
   bool isLoading = false;
 
-  // ----------------------------------------------------------
   // DIARY ENTRIES
-  // ----------------------------------------------------------
-  //
-  // IMPORTANT:
-  // This list starts EMPTY.
-  //
-  // There are NO demo records here.
-  //
-  // Records are loaded from:
-  //
-  // Flutter
-  //    ↓
-  // ApiService
-  //    ↓
-  // FastAPI /diary
-  //    ↓
-  // PostgreSQL
-  //
-  // The backend returns only records belonging
-  // to the authenticated user.
-  // ----------------------------------------------------------
-
   final List<DiaryEntry> entries = [];
 
-  // ==========================================================
+  // Experiences shared by the currently logged-in farmer.
+  final List<ExperienceModel> myExperiences = [];
+  bool isLoadingExperiences = false;
+
   // INITIALIZATION
-  // ==========================================================
 
   @override
   void initState() {
@@ -98,9 +113,29 @@ class _DiaryScreenState extends State<DiaryScreen> {
     restoreSession();
   }
 
-  // ==========================================================
+  // LANGUAGE CHANGE
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final String lang =
+        Localizations.localeOf(context).languageCode;
+
+    if (isLoggedIn &&
+        _loadedLang != null &&
+        _loadedLang != lang) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // Reload both lists using the newly selected language.
+          loadDiaryEntries();
+          loadMyExperiences();
+        }
+      });
+    }
+  }
+
   // RESTORE SESSION
-  // ==========================================================
 
   Future<void> restoreSession() async {
     try {
@@ -116,7 +151,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
           isLoggedIn = true;
         });
 
-        await loadDiaryEntries();
+        await Future.wait([
+          loadDiaryEntries(),
+          loadMyExperiences(),
+        ]);
       }
     } catch (_) {
       if (!mounted) {
@@ -129,9 +167,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  // ==========================================================
   // OPEN LOGIN / REGISTER
-  // ==========================================================
 
   Future<void> openAuthentication() async {
     final bool? authenticated =
@@ -151,7 +187,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
         isLoggedIn = true;
       });
 
-      await loadDiaryEntries();
+      await Future.wait([
+        loadDiaryEntries(),
+        loadMyExperiences(),
+      ]);
     }
   }
 
@@ -169,8 +208,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
 
     try {
+      final String lang =
+          Localizations.localeOf(context).languageCode;
+
       final List<DiaryEntryModel> apiEntries =
-          await ApiService.getDiaryEntries();
+          await ApiService.getDiaryEntries(lang: lang);
 
       if (!mounted) {
         return;
@@ -208,6 +250,66 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 
   // ==========================================================
+  // LOAD MY SHARED EXPERIENCES
+  // ==========================================================
+  //
+  // Requests the experiences in the language the app is
+  // showing right now (lang=en or lang=mr).
+  //
+  // If the user switches language while a request is still
+  // running, the late response is ignored so an old-language
+  // list never replaces the new one.
+  // ==========================================================
+
+  Future<void> loadMyExperiences() async {
+    if (!mounted || !isLoggedIn) return;
+
+    final String lang =
+        Localizations.localeOf(context).languageCode;
+
+    _loadedLang = lang;
+
+    setState(() {
+      isLoadingExperiences = true;
+    });
+
+    try {
+      final List<ExperienceModel> experiences =
+          await ApiService.getMyExperiences(lang: lang);
+
+      if (!mounted) return;
+
+      // The language changed while this request was running.
+      // A newer request is already loading the correct list.
+      if (lang != _loadedLang) return;
+
+      setState(() {
+        myExperiences
+          ..clear()
+          ..addAll(experiences);
+        isLoadingExperiences = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      if (lang != _loadedLang) return;
+
+      setState(() {
+        isLoadingExperiences = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to load your shared experiences: $error',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // ==========================================================
   // REFRESH DIARY
   // ==========================================================
 
@@ -217,6 +319,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
 
     await loadDiaryEntries();
+    await loadMyExperiences();
   }
 
   // ==========================================================
@@ -232,7 +335,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
     setState(() {
       isLoggedIn = false;
+      _loadedLang = null;
       entries.clear();
+      myExperiences.clear();
     });
   }
 
@@ -270,6 +375,253 @@ class _DiaryScreenState extends State<DiaryScreen> {
           },
         );
       },
+    );
+  }
+
+  // ==========================================================
+  // DELETE MY SHARED EXPERIENCE
+  // ==========================================================
+
+  Future<void> confirmDeleteExperience(
+    ExperienceModel experience,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text(
+          _isMarathi
+              ? 'शेअर केलेला अनुभव हटवा ?'
+              : 'Delete shared experience?',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        content: Text(
+          _isMarathi
+              ? '"${experience.title}" हा अनुभव कायमचा हटवा?'
+              : 'Are you sure you want to permanently delete '
+                  '"${experience.title}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(_cancelLabel()),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD64A4A),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(_deleteLabel()),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ApiService.deleteExperience(experience.id);
+
+      if (!mounted) return;
+
+      setState(() {
+        myExperiences.removeWhere((item) => item.id == experience.id);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isMarathi
+                ? 'अनुभव यशस्वीरित्या हटवला.'
+                : 'Experience deleted successfully.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF287B49),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      final String message = error.toString();
+      String friendlyMessage = _isMarathi ? 'अनुभव हटवता आला नाही.' : 'Unable to delete the experience.';
+      if (message.contains('401')) {
+        friendlyMessage = _isMarathi ? 'तुमचे सत्र संपले आहे. कृपया पुन्हा लॉग इन करा.' : 'Your session has expired. Please log in again.';
+      } else if (message.contains('403')) {
+        friendlyMessage = _isMarathi ? 'तुम्ही फक्त तुमचे स्वतःचे अनुभव हटवू शकता.' : 'You can delete only your own experiences.';
+      } else if (message.contains('404')) {
+        friendlyMessage = _isMarathi ? 'हा अनुभव आता उपलब्ध नाही.' : 'This experience no longer exists.';
+      } else if (message.contains('SocketException')) {
+        friendlyMessage = _isMarathi ? 'AgriGuide सर्व्हरशी कनेक्ट करता आले नाही.' : 'Unable to connect to the AgriGuide server.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(friendlyMessage),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFFB63E3E),
+        ),
+      );
+    }
+  }
+
+  // ==========================================================
+  // MY SHARED EXPERIENCES SECTION
+  // ==========================================================
+
+  Widget buildMySharedExperiences() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _isMarathi
+                    ? 'माझे सामायिक अनुभव'
+                    : 'My Shared Experiences',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF26372A),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE7F2E1),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Text(
+                '${myExperiences.length}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4A7D50),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (isLoadingExperiences)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(
+                color: Color(0xFF168A52),
+              ),
+            ),
+          )
+        else if (myExperiences.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE0E8DD)),
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.forum_outlined,
+                  size: 34,
+                  color: Color(0xFF6B806D),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _isMarathi
+                      ? 'तुम्ही अद्याप कोणतेही अनुभव शेअर केलेले नाही.'
+                      : 'You have not shared any experiences yet.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Color(0xFF536057)),
+                ),
+              ],
+            ),
+          )
+        else
+          ...myExperiences.map(
+            (experience) => Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 11),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE0E8DD)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A1E3A24),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    experience.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF26372A),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    experience.topic,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF43844D),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    experience.content,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.45,
+                      color: Color(0xFF536057),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${_isMarathi ? 'शेअर केले: ' : 'Shared: '}${formatDate(experience.createdAt)}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF879188),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => confirmDeleteExperience(experience),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Color(0xFFD64A4A),
+                      ),
+                      label: Text(
+                        _deleteLabel(),
+                        style: const TextStyle(
+                          color: Color(0xFFD64A4A),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -526,7 +878,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           IconButton(
             onPressed:
                 isLoading ? null : refreshDiary,
-            tooltip: 'Refresh',
+            tooltip: _isMarathi ? 'रीफ्रेश' : 'Refresh',
             icon: const Icon(
               Icons.refresh_rounded,
             ),
@@ -552,6 +904,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
           onRefresh: refreshDiary,
           color: const Color(0xFF168A52),
           child: ListView(
+            controller: _scrollController,
             physics:
                 const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
@@ -569,6 +922,45 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
               buildDiaryHeader(),
 
+              const SizedBox(height: 14),
+
+              // Quick navigation to the two My Farm sections.
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _scrollToSection(_activityHistoryKey),
+                      icon: const Icon(Icons.agriculture_outlined, size: 18),
+                      label: Text(_isMarathi ? 'क्रियाकलाप इतिहास' : 'Activity History'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF168A52),
+                        side: const BorderSide(color: Color(0xFFB8D8BD)),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _scrollToSection(_sharedExperiencesKey),
+                      icon: const Icon(Icons.forum_outlined, size: 18),
+                      label: Text(_isMarathi ? 'माझे अनुभव' : 'My Experiences'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF168A52),
+                        side: const BorderSide(color: Color(0xFFB8D8BD)),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 22),
 
               // ------------------------------------------------
@@ -576,6 +968,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
               // ------------------------------------------------
 
               Row(
+                key: _activityHistoryKey,
                 children: [
                   Expanded(
                     child: Text(
@@ -646,6 +1039,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
                     );
                   },
                 ),
+
+              const SizedBox(height: 28),
+
+              Container(
+                key: _sharedExperiencesKey,
+                child: buildMySharedExperiences(),
+              ),
             ],
           ),
         ),
@@ -799,9 +1199,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
           color: const Color(0xFFE1E7DF),
         ),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 30,
             height: 30,
             child: CircularProgressIndicator(
@@ -810,14 +1210,17 @@ class _DiaryScreenState extends State<DiaryScreen> {
             ),
           ),
 
-          SizedBox(height: 14),
+          const SizedBox(height: 14),
 
           Text(
-            'Loading your farm records...',
+            _isMarathi
+                ? 'तुमच्या शेतीच्या नोंदी लोड होत आहेत...'
+                : 'Loading your farm records...',
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
-              color: Color(0xFF788178),
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF68736B),
             ),
           ),
         ],
@@ -901,7 +1304,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
                               minHeight: 42,
                             ),
                             iconSize: 21,
-                            tooltip: 'More options',
+                            tooltip: _isMarathi ? 'अधिक पर्याय' : 'More options',
                             icon: const Icon(
                               Icons.more_horiz_rounded,
                               color: Color(0xFF758078),
@@ -1308,9 +1711,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
   }
 }
 
-// ============================================================
 // ADD DIARY ENTRY SHEET
-// ============================================================
 
 class AddDiaryEntrySheet
     extends StatefulWidget {
@@ -1327,15 +1728,11 @@ class AddDiaryEntrySheet
       _AddDiaryEntrySheetState();
 }
 
-// ============================================================
 // ADD ENTRY STATE
-// ============================================================
 
 class _AddDiaryEntrySheetState
     extends State<AddDiaryEntrySheet> {
-  // ----------------------------------------------------------
   // FORM CONTROLLERS
-  // ----------------------------------------------------------
 
   final TextEditingController
       cropController =
@@ -1349,15 +1746,10 @@ class _AddDiaryEntrySheetState
       notesController =
       TextEditingController();
 
-  // ----------------------------------------------------------
   // SAVE STATE
-  // ----------------------------------------------------------
-
   bool isSaving = false;
 
-  // ==========================================================
   // DISPOSE
-  // ==========================================================
 
   @override
   void dispose() {
@@ -1368,9 +1760,7 @@ class _AddDiaryEntrySheetState
     super.dispose();
   }
 
-  // ==========================================================
   // SAVE NEW ENTRY
-  // ==========================================================
 
   Future<void> saveEntry() async {
     final l10n =
@@ -1385,9 +1775,7 @@ class _AddDiaryEntrySheetState
     final String notes =
         notesController.text.trim();
 
-    // --------------------------------------------------------
     // VALIDATION
-    // --------------------------------------------------------
 
     if (crop.isEmpty ||
         activity.isEmpty ||
@@ -1406,24 +1794,14 @@ class _AddDiaryEntrySheetState
       return;
     }
 
-    // --------------------------------------------------------
     // START SAVING
-    // --------------------------------------------------------
 
     setState(() {
       isSaving = true;
     });
 
     try {
-      // ------------------------------------------------------
-      // REAL API REQUEST
-      // ------------------------------------------------------
-      //
-      // The backend automatically attaches the current
-      // authenticated user's ID.
-      //
-      // Flutter does NOT send user_id.
-      // ------------------------------------------------------
+      // REAL API REQUEST      
 
       final DiaryEntryModel created =
           await ApiService.createDiaryEntry(
@@ -1437,18 +1815,14 @@ class _AddDiaryEntrySheetState
         return;
       }
 
-      // ------------------------------------------------------
       // CONVERT API MODEL TO UI MODEL
-      // ------------------------------------------------------
 
       final DiaryEntry newEntry =
           DiaryEntry.fromApi(
         created,
       );
 
-      // ------------------------------------------------------
       // SEND REAL DATABASE RECORD TO PARENT
-      // ------------------------------------------------------
 
       widget.onEntryAdded(
         newEntry,
@@ -1478,9 +1852,7 @@ class _AddDiaryEntrySheetState
     }
   }
 
-  // ==========================================================
   // SAVE ERROR
-  // ==========================================================
 
   String getSaveErrorMessage(
     Object error,
@@ -1503,9 +1875,7 @@ class _AddDiaryEntrySheetState
     return 'Unable to save the farm activity.';
   }
 
-  // ==========================================================
   // BUILD FORM
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -1540,9 +1910,7 @@ class _AddDiaryEntrySheetState
               ),
               const SizedBox(height: 18),
 
-              // ------------------------------------------------
               // TITLE
-              // ------------------------------------------------
 
               Text(
                 l10n.addActivity,
@@ -1565,9 +1933,7 @@ class _AddDiaryEntrySheetState
 
               const SizedBox(height: 18),
 
-              // ------------------------------------------------
               // CROP / FIELD
-              // ------------------------------------------------
 
               buildFormField(
                 controller:
@@ -1582,9 +1948,7 @@ class _AddDiaryEntrySheetState
 
               const SizedBox(height: 12),
 
-              // ------------------------------------------------
               // ACTIVITY
-              // ------------------------------------------------
 
               buildFormField(
                 controller:
@@ -1599,9 +1963,7 @@ class _AddDiaryEntrySheetState
 
               const SizedBox(height: 12),
 
-              // ------------------------------------------------
               // NOTES
-              // ------------------------------------------------
 
               TextField(
                 controller:
@@ -1690,9 +2052,7 @@ class _AddDiaryEntrySheetState
 
               const SizedBox(height: 18),
 
-              // ------------------------------------------------
               // SAVE BUTTON
-              // ------------------------------------------------
 
               SizedBox(
                 width:
@@ -1768,9 +2128,7 @@ class _AddDiaryEntrySheetState
     );
   }
 
-  // ==========================================================
   // FORM FIELD
-  // ==========================================================
 
   Widget buildFormField({
     required TextEditingController

@@ -15,65 +15,30 @@ class DiseaseScreen extends StatefulWidget {
 }
 
 class _DiseaseScreenState extends State<DiseaseScreen> {
-  // ============================================================
+
   // IMAGE PICKER
-  // ============================================================
-  //
-  // ImagePicker is provided by the image_picker package.
-  // It allows Flutter to open the phone camera or gallery.
-  //
   final ImagePicker imagePicker = ImagePicker();
 
   // Prevents multiple camera/gallery requests from being
   // opened at the same time.
-  //
   // This is useful because Android can throw an
   // "already_active" error if the picker is opened twice.
   bool isPickingImage = false;
 
-  // ============================================================
-  // SELECTED IMAGE
-  // ============================================================
-  //
-  // File? means:
-  //
-  // File  -> an image is selected
-  // null  -> no image is selected
-  //
+  
   File? selectedImage;
-
-  // ============================================================
-  // LOADING
-  // ============================================================
-  //
-  // Used while the disease detection operation is running.
   bool isLoading = false;
 
-  // ============================================================
   // API RESULT
-  // ============================================================
-  //
-  // These values are nullable because the actual disease
-  // backend is not connected yet.
-  //
+  
   String? detectedDisease;
   String? solution;
 
-  // ============================================================
   // ERROR / STATUS MESSAGE
-  // ============================================================
-  //
-  // This is used for:
-  //
-  // - image selection errors
-  // - missing image
-  // - backend pending message
-  //
+ 
   String? errorMessage;
 
-  // ============================================================
   // PICK IMAGE
-  // ============================================================
 
   Future<void> pickImage(ImageSource source) async {
     // Prevent duplicate picker requests.
@@ -90,10 +55,10 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
     try {
       // Open either the camera or gallery.
-      //
       // imageQuality: 85 slightly compresses the image.
       // This is useful because the future API upload will
       // contain the image and smaller images upload faster.
+
       final XFile? pickedFile = await imagePicker.pickImage(
         source: source,
         imageQuality: 85,
@@ -132,11 +97,9 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       });
     } finally {
       // finally always executes:
-      //
       // - if image selection succeeds
       // - if user cancels
       // - if an error occurs
-      //
       // Therefore the picker becomes available again.
       if (mounted) {
         setState(() {
@@ -146,9 +109,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     }
   }
 
-  // ============================================================
   // IMAGE SOURCE BOTTOM SHEET
-  // ============================================================
 
   void showImageSourceOptions() {
     final l10n = AppLocalizations.of(context)!;
@@ -174,9 +135,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ------------------------------------------------
                 // DRAG HANDLE
-                // ------------------------------------------------
 
                 Container(
                   width: 40,
@@ -188,10 +147,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
                 ),
 
                 const SizedBox(height: 18),
-
-                // ------------------------------------------------
                 // TITLE
-                // ------------------------------------------------
 
                 Align(
                   alignment: Alignment.centerLeft,
@@ -207,9 +163,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
                 const SizedBox(height: 15),
 
-                // ------------------------------------------------
                 // CAMERA OPTION
-                // ------------------------------------------------
 
                 buildSourceOption(
                   icon: Icons.camera_alt_outlined,
@@ -224,10 +178,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
                 const SizedBox(height: 10),
 
-                // ------------------------------------------------
                 // GALLERY OPTION
-                // ------------------------------------------------
-
                 buildSourceOption(
                   icon: Icons.photo_library_outlined,
                   title: l10n.chooseFromGallery,
@@ -246,9 +197,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // IMAGE SOURCE OPTION
-  // ============================================================
 
   Widget buildSourceOption({
     required IconData icon,
@@ -324,9 +273,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // REMOVE IMAGE
-  // ============================================================
 
   void removeImage() {
     setState(() {
@@ -336,35 +283,12 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       errorMessage = null;
     });
   }
-
-  // ============================================================
-  // DETECT DISEASE
-  // ============================================================
-  //
-  // IMPORTANT:
-  //
-  // The real disease detection backend is not connected yet.
-  //
-  // Therefore this method does NOT return:
-  //
-  // "Leaf Blight"
-  // "Powdery Mildew"
-  // etc.
-  //
-  // Doing that would be fake data.
-  //
-  // Instead, it shows the proper pending-backend state.
-  //
-  // Later, only this method needs to be connected to the
-  // actual disease API/model.
-  // ============================================================
+  
 
   Future<void> detectDisease() async {
     final l10n = AppLocalizations.of(context)!;
 
-    // ----------------------------------------------------------
     // IMAGE REQUIRED
-    // ----------------------------------------------------------
 
     if (selectedImage == null) {
       setState(() {
@@ -373,9 +297,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       return;
     }
 
-    // ----------------------------------------------------------
     // START LOADING
-    // ----------------------------------------------------------
 
     setState(() {
       isLoading = true;
@@ -385,10 +307,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     });
 
     try {
-      // --------------------------------------------------------
       // SEND IMAGE TO FASTAPI
-      // --------------------------------------------------------
-      //
       // The ApiService method uses multipart/form-data because
       // we are uploading the actual image file.
       //
@@ -407,12 +326,8 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
         return;
       }
 
-      // --------------------------------------------------------
       // CURRENT MODEL STATUS
-      // --------------------------------------------------------
-      //
       // modelReady is currently false.
-      //
       // Therefore we do NOT display a fake disease name or
       // solution. When the real model is trained, this same
       // screen can display the actual prediction.
@@ -429,10 +344,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
         }
       });
     } catch (error) {
-      // --------------------------------------------------------
       // API / NETWORK ERROR
-      // --------------------------------------------------------
-      //
       // Do not expose technical exceptions directly to the
       // farmer. Show a simple actionable message instead.
 
@@ -449,9 +361,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     }
   }
 
-  // ============================================================
   // MAIN BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -460,9 +370,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8F2),
 
-      // ========================================================
       // APP BAR
-      // ========================================================
 
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F8F2),
@@ -476,9 +384,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
         ),
       ),
 
-      // ========================================================
       // BODY
-      // ========================================================
 
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -491,17 +397,13 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --------------------------------------------------
             // INTRO CARD
-            // --------------------------------------------------
 
             buildIntroCard(),
 
             const SizedBox(height: 22),
 
-            // --------------------------------------------------
             // UPLOAD SECTION TITLE
-            // --------------------------------------------------
 
             Text(
               l10n.uploadCropImage,
@@ -525,46 +427,26 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
             const SizedBox(height: 14),
 
-            // --------------------------------------------------
             // IMAGE PREVIEW
-            // --------------------------------------------------
-
             buildImagePreview(),
-
             const SizedBox(height: 13),
 
-            // --------------------------------------------------
             // CAMERA / GALLERY BUTTONS
-            // --------------------------------------------------
-
             buildImageButtons(),
-
             const SizedBox(height: 18),
 
-            // --------------------------------------------------
             // STATUS / ERROR MESSAGE
-            // --------------------------------------------------
-
             if (errorMessage != null) ...[
               buildMessageCard(),
               const SizedBox(height: 16),
             ],
 
-            // --------------------------------------------------
             // DETECT BUTTON
-            // --------------------------------------------------
-
             buildDetectButton(),
-
             const SizedBox(height: 18),
 
-            // --------------------------------------------------
             // REAL DISEASE RESULT
-            // --------------------------------------------------
-            //
-            // These widgets will remain hidden until the real
-            // disease backend supplies actual data.
-            //
+          
 
             if (detectedDisease != null)
               buildDiseaseResult(),
@@ -580,9 +462,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // INTRO CARD
-  // ============================================================
 
   Widget buildIntroCard() {
     final l10n = AppLocalizations.of(context)!;
@@ -607,9 +487,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --------------------------------------------------
           // ICON
-          // --------------------------------------------------
 
           Container(
             width: 58,
@@ -627,9 +505,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
           const SizedBox(width: 14),
 
-          // --------------------------------------------------
           // TEXT
-          // --------------------------------------------------
 
           Expanded(
             child: Column(
@@ -662,17 +538,11 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // IMAGE PREVIEW
-  // ============================================================
-
   Widget buildImagePreview() {
     final l10n = AppLocalizations.of(context)!;
 
-    // ==========================================================
     // NO IMAGE
-    // ==========================================================
-
     if (selectedImage == null) {
       return Container(
         width: double.infinity,
@@ -740,17 +610,13 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       );
     }
 
-    // ==========================================================
     // IMAGE SELECTED
-    // ==========================================================
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(23),
       child: Stack(
         children: [
-          // ----------------------------------------------------
           // IMAGE
-          // ----------------------------------------------------
 
           Container(
             width: double.infinity,
@@ -775,13 +641,9 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
             ),
           ),
 
-          // ----------------------------------------------------
           // TOP GRADIENT
-          // ----------------------------------------------------
-          //
           // Helps the remove button remain visible even on
           // bright images.
-          //
 
           Positioned(
             left: 0,
@@ -804,9 +666,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
             ),
           ),
 
-          // ----------------------------------------------------
           // REMOVE BUTTON
-          // ----------------------------------------------------
 
           Positioned(
             top: 12,
@@ -829,9 +689,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
             ),
           ),
 
-          // ----------------------------------------------------
           // IMAGE READY LABEL
-          // ----------------------------------------------------
 
           Positioned(
             left: 12,
@@ -871,18 +729,14 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // CAMERA / GALLERY BUTTONS
-  // ============================================================
 
   Widget buildImageButtons() {
     final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
-        // ======================================================
         // CAMERA BUTTON
-        // ======================================================
 
         Expanded(
           child: OutlinedButton.icon(
@@ -919,9 +773,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
         const SizedBox(width: 11),
 
-        // ======================================================
         // GALLERY BUTTON
-        // ======================================================
 
         Expanded(
           child: OutlinedButton.icon(
@@ -959,9 +811,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // STATUS / MESSAGE CARD
-  // ============================================================
 
   Widget buildMessageCard() {
     final l10n = AppLocalizations.of(context)!;
@@ -986,10 +836,8 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ----------------------------------------------------
-          // ICON
-          // ----------------------------------------------------
 
+          // ICON
           Container(
             width: 38,
             height: 38,
@@ -1012,10 +860,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
           const SizedBox(width: 11),
 
-          // ----------------------------------------------------
           // MESSAGE
-          // ----------------------------------------------------
-
           Expanded(
             child: Text(
               errorMessage!,
@@ -1034,10 +879,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // DETECT BUTTON
-  // ============================================================
-
   Widget buildDetectButton() {
     final l10n = AppLocalizations.of(context)!;
 
@@ -1106,18 +948,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // DISEASE RESULT
-  // ============================================================
-  //
-  // This widget is ready for the real API.
-  //
-  // Example future flow:
-  //
-  // detectedDisease = response["disease"];
-  //
-  // Then this card will automatically appear.
-  // ============================================================
 
   Widget buildDiseaseResult() {
     final l10n = AppLocalizations.of(context)!;
@@ -1142,9 +973,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ----------------------------------------------------
           // RESULT HEADER
-          // ----------------------------------------------------
 
           Row(
             children: [
@@ -1179,9 +1008,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
           const SizedBox(height: 15),
 
-          // ----------------------------------------------------
           // DISEASE NAME
-          // ----------------------------------------------------
 
           Container(
             width: double.infinity,
@@ -1204,9 +1031,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     );
   }
 
-  // ============================================================
   // SOLUTION CARD
-  // ============================================================
 
   Widget buildSolutionCard() {
     final l10n = AppLocalizations.of(context)!;
@@ -1224,10 +1049,8 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ----------------------------------------------------
-          // HEADER
-          // ----------------------------------------------------
 
+          // HEADER
           Row(
             children: [
               Container(
@@ -1261,9 +1084,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
 
           const SizedBox(height: 14),
 
-          // ----------------------------------------------------
           // SOLUTION
-          // ----------------------------------------------------
 
           Text(
             solution ?? '',

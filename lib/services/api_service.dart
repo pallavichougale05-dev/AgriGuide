@@ -655,11 +655,21 @@ class ApiService {
   // ==========================================================
   // FARM DIARY
   // ==========================================================
+  //
+  // lang is 'en' or 'mr'. The backend translates the diary
+  // text for display only; the saved originals are unchanged.
+  // The timeout is longer because the first request in a new
+  // language may wait for translations.
+  // ==========================================================
 
   static Future<List<DiaryEntryModel>>
-      getDiaryEntries() async {
+      getDiaryEntries({String lang = 'en'}) async {
     final Uri url = Uri.parse(
       '$baseUrl/diary',
+    ).replace(
+      queryParameters: {
+        'lang': lang,
+      },
     );
 
     final http.Response response =
@@ -667,7 +677,7 @@ class ApiService {
       url,
       headers: await _getAuthorizedHeaders(),
     ).timeout(
-      const Duration(seconds: 15),
+      const Duration(seconds: 30),
     );
 
     if (response.statusCode == 200) {
@@ -929,40 +939,127 @@ static Future<void> deleteDiaryEntry(
   // FARMER EXPERIENCES
   // ==========================================================
 
-  static Future<List<ExperienceModel>> getExperiences() async {
-    final Uri url = Uri.parse('$baseUrl/knowledge/experiences');
+  static Future<List<ExperienceModel>> getExperiences({
+  String lang = 'en',
+}) async {
+  final Uri url = Uri.parse(
+    '$baseUrl/knowledge/experiences',
+  ).replace(
+    queryParameters: {
+      'lang': lang,
+    },
+  );
 
-    final http.Response response = await http.get(
-      url,
-      headers: await _getAuthorizedHeaders(),
-    ).timeout(const Duration(seconds: 15));
+  final http.Response response = await http.get(
+    url,
+    headers: await _getAuthorizedHeaders(),
+  ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data =
-          jsonDecode(response.body) as Map<String, dynamic>;
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data =
+        jsonDecode(response.body) as Map<String, dynamic>;
 
-      final List<dynamic> rawExperiences =
-          data['experiences'] as List<dynamic>;
+    final List<dynamic> rawExperiences =
+        data['experiences'] as List<dynamic>;
 
-      return rawExperiences
-          .map(
-            (item) => ExperienceModel.fromJson(
-              item as Map<String, dynamic>,
-            ),
-          )
-          .toList();
-    }
+    return rawExperiences
+        .map(
+          (item) => ExperienceModel.fromJson(
+            item as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
 
+  throw Exception(
+    'Unable to load farmer experiences. '
+    'HTTP ${response.statusCode}',
+  );
+}
+
+  static Future<List<ExperienceModel>> getMyExperiences({
+  String lang = 'en',
+}) async {
+  final String? token = await getAccessToken();
+
+  if (token == null || token.trim().isEmpty) {
     throw Exception(
-      'Unable to load farmer experiences. '
-      'HTTP ${response.statusCode}',
+      'Please log in to view your shared experiences.',
     );
   }
 
-  static Future<void> shareExperience({
+  final Uri url = Uri.parse(
+    '$baseUrl/knowledge/my-experiences',
+  ).replace(
+    queryParameters: {
+      'lang': lang,
+    },
+  );
+
+  final http.Response response = await http.get(
+    url,
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  ).timeout(const Duration(seconds: 15));
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data =
+        jsonDecode(response.body) as Map<String, dynamic>;
+
+    final List<dynamic> rawExperiences =
+        data['experiences'] as List<dynamic>;
+
+    return rawExperiences
+        .map(
+          (item) => ExperienceModel.fromJson(
+            item as Map<String, dynamic>,
+          ),
+        )
+        .toList();
+  }
+
+  throw Exception(
+    'Unable to load your shared experiences. '
+    'HTTP ${response.statusCode}: ${response.body}',
+  );
+}
+
+  static Future<void> deleteExperience(int experienceId) async {
+    final String? token = await getAccessToken();
+    if (token == null || token.trim().isEmpty) {
+      throw Exception('Your session has expired. Please log in again.');
+    }
+
+    final Uri url = Uri.parse(
+      '$baseUrl/knowledge/experiences/$experienceId',
+    );
+    final http.Response response = await http.delete(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return;
+    }
+
+    throw Exception(
+      _getApiErrorMessage(
+        response,
+        fallback: 'Unable to delete shared experience.',
+      ),
+    );
+  }
+
+    static Future<void> shareExperience({
     required String title,
     required String topic,
     required String content,
+    String lang = 'en',
     File? photo,
   }) async {
     final String? token = await getAccessToken();
@@ -982,7 +1079,8 @@ static Future<void> deleteDiaryEntry(
     request.fields['title'] = title.trim();
     request.fields['topic'] = topic.trim();
     request.fields['content'] = content.trim();
-
+    request.fields['lang'] = lang;
+    
     if (photo != null) {
       request.files.add(
         await http.MultipartFile.fromPath('photo', photo.path),
@@ -1004,60 +1102,6 @@ static Future<void> deleteDiaryEntry(
       '${response.body}',
     );
   }
-
-  
-  // ============================================================
-  // DELETE FARMER EXPERIENCE
-  // DELETE /knowledge/experiences/{experience_id}
-  // ============================================================
-
-  static Future<void> deleteExperience(int experienceId) async {
-    final String? token = await getAccessToken();
-
-    if (token == null || token.trim().isEmpty) {
-      throw Exception('Please log in again to delete your experience.');
-    }
-
-    final Uri url = Uri.parse(
-      '$baseUrl/knowledge/experiences/$experienceId',
-    );
-
-    final http.Response response = await http.delete(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    ).timeout(const Duration(seconds: 15));
-
-    if (response.statusCode == 200 || response.statusCode == 204) {
-      return;
-    }
-
-    if (response.statusCode == 401) {
-      throw Exception('Your session has expired. Please log in again.');
-    }
-
-    if (response.statusCode == 403) {
-      throw Exception('You can only delete your own experience.');
-    }
-
-    String message = 'Unable to delete experience. HTTP ${response.statusCode}';
-
-    try {
-      final Map<String, dynamic> data =
-          jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (data['detail'] != null) {
-        message = data['detail'].toString();
-      } else if (data['message'] != null) {
-        message = data['message'].toString();
-      }
-    } catch (_) {}
-
-    throw Exception(message);
-  }
-
 }
 
 
@@ -1615,10 +1659,7 @@ class DiseaseDetectionResponse {
   }
 }
 
-
-// ============================================================
 // FARM DIARY ENTRY
-// ============================================================
 
 class DiaryEntryModel {
   final int id;
@@ -1658,8 +1699,8 @@ class DiaryEntryModel {
 }
 
 class ExperienceModel {
-  final int userId;
   final int id;
+  final int? userId;
   final String title;
   final String topic;
   final String content;
@@ -1668,8 +1709,8 @@ class ExperienceModel {
   final DateTime createdAt;
 
   const ExperienceModel({
-    required this.userId,
     required this.id,
+    this.userId,
     required this.title,
     required this.topic,
     required this.content,
@@ -1680,8 +1721,8 @@ class ExperienceModel {
 
   factory ExperienceModel.fromJson(Map<String, dynamic> json) {
     return ExperienceModel(
-      userId: (json['user_id'] as num?)?.toInt() ?? 0,
       id: (json['id'] as num).toInt(),
+      userId: (json['user_id'] as num?)?.toInt(),
       title: json['title'] as String? ?? '',
       topic: json['topic'] as String? ?? '',
       content: json['content'] as String? ?? '',
