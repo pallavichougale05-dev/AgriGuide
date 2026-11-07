@@ -239,6 +239,70 @@
   "diseaseDetection": "रोग निदान आणि उपाय",
   "agriAssistant": "शेती सहाय्यक",
 
+
+  "welcomeBack": "पुन्हा स्वागत आहे",
+  "createYourAccount": "तुमचे खाते तयार करा",
+  "emailAddress": "ईमेल पत्ता",
+  "enterYourEmailAddress": "तुमचा ईमेल पत्ता टाका",
+    "loginSubtitle": "तुमच्या AgriGuide खात्यात प्रवेश करण्यासाठी लॉगिन करा.",
+  "createAccountSubtitle": "तुमच्या शेतीच्या नोंदी सुरक्षित ठेवण्यासाठी खाते तयार करा.",
+
+  "fullName": "पूर्ण नाव",
+  "enterFullName": "तुमचे पूर्ण नाव टाका",
+  "pleaseEnterFullName": "कृपया तुमचे पूर्ण नाव टाका.",
+  "nameMinLength": "नावात किमान 2 अक्षरे असावीत.",
+
+  "password": "पासवर्ड",
+  "enterPassword": "तुमचा पासवर्ड टाका",
+  "createPassword": "पासवर्ड तयार करा",
+  "confirmPassword": "पासवर्डची पुष्टी करा",
+  "reenterPassword": "तुमचा पासवर्ड पुन्हा टाका",
+
+  "pleaseEnterEmail": "कृपया तुमचा ईमेल पत्ता टाका.",
+  "invalidEmail": "कृपया वैध ईमेल पत्ता टाका.",
+  "pleaseEnterPassword": "कृपया तुमचा पासवर्ड टाका.",
+  "passwordMinLength": "पासवर्डमध्ये किमान 8 अक्षरे असावीत.",
+  "pleaseConfirmPassword": "कृपया तुमच्या पासवर्डची पुष्टी करा.",
+  "passwordsDoNotMatch": "पासवर्ड जुळत नाहीत.",
+
+  "loginButton": "लॉगिन",
+  "createAccountButton": "खाते तयार करा",
+  "dontHaveAccount": "तुमचे खाते नाही का?",
+  "alreadyHaveAccount": "तुमचे आधीपासून खाते आहे का?",
+  "register": "नोंदणी करा",
+
+  "accountAlreadyExists": "या ईमेलसह खाते आधीपासून अस्तित्वात आहे.",
+  "incorrectCredentials": "ईमेल किंवा पासवर्ड चुकीचा आहे.",
+  "unableConnectServer": "AgriGuide सर्व्हरशी संपर्क साधता आला नाही. कृपया बॅकएंड सुरू असल्याची खात्री करा.",
+  "loginFailed": "लॉगिन अयशस्वी झाले. कृपया तुमची माहिती तपासा आणि पुन्हा प्रयत्न करा.",
+  "registrationFailed": "नोंदणी अयशस्वी झाली. कृपया तुमची माहिती तपासा आणि पुन्हा प्रयत्न करा.",
+  "secureSessionNote": "तुमचे खाते सत्र सुरक्षितपणे साठवले जाते.",
+  "shareExperienceIntro": "तुम्ही शिकलेला अनुभव इतर शेतकऱ्यांसोबत शेअर करा. AgriGuide वापरणारे सर्वजण तुमचा अनुभव वाचू शकतात.",
+
+"cropTopic": "पीक / विषय",
+"yourExperience": "तुमचा अनुभव",
+"photoOptional": "फोटो (पर्यायी)",
+"addPhoto": "फोटो जोडा",
+"submitExperience": "अनुभव सबमिट करा",
+
+"changePhoto": "फोटो बदला",
+
+"removePhoto": "फोटो काढून टाका",
+
+"shareExperienceTitleHint": "उदा. टोमॅटोवरील पानांवरील डागांचे नियंत्रण कसे केले",
+"shareExperienceTopicHint": "उदा. टोमॅटो, ठिबक सिंचन",
+"shareExperienceContentHint": "तुम्ही काय केले आणि त्याचा काय परिणाम झाला ते लिहा",
+
+"photoPickerError": "कॅमेरा किंवा गॅलरी उघडता आली नाही. कृपया ॲपच्या परवानग्या तपासा.",
+
+"shareExperienceTitleValidation": "कृपया किमान 3 अक्षरांचे शीर्षक लिहा.",
+"shareExperienceTopicValidation": "कृपया पीक किंवा विषय लिहा.",
+"shareExperienceContentValidation": "कृपया किमान 20 अक्षरांचा अनुभव लिहा.",
+
+"shareExperienceConnectionError": "AgriGuide सर्व्हरशी संपर्क साधता आला नाही. कृपया इंटरनेट कनेक्शन तपासा.",
+"shareExperienceTimeoutError": "विनंतीसाठी खूप वेळ लागला. कृपया पुन्हा प्रयत्न करा.",
+
+
   "openSettings": "सेटिंग्ज उघडा",
   "partlyCloudy": "अंशतः ढगाळ"
 }

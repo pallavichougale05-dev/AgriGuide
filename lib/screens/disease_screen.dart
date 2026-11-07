@@ -317,10 +317,14 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
       // The current backend only confirms that the image was
       // received because the real ML model is not trained yet.
 
-      final DiseaseDetectionResponse response =
-          await ApiService.detectDisease(
-        selectedImage!,
-      );
+      final String lang =
+    Localizations.localeOf(context).languageCode;
+
+        final DiseaseDetectionResponse response =
+            await ApiService.detectDisease(
+          selectedImage!,
+          lang: lang,
+        );
 
       if (!mounted) {
         return;

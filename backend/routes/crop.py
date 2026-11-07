@@ -1,15 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+# Import the existing translation service.
+# This assumes translation_service.py is in the backend root.
+from translation_service import translate_text
 
-# Creates the router for Crop Recommendation APIs.
+
 router = APIRouter(
     prefix="/crop",
     tags=["Crop Recommendation"],
 )
 
 
-# Defines the farm information received from Flutter.
 class CropRequest(BaseModel):
     nitrogen: float
     phosphorus: float
@@ -20,29 +22,30 @@ class CropRequest(BaseModel):
     rainfall: float
 
 
-# Defines one crop recommendation returned to Flutter.
 class CropRecommendation(BaseModel):
     crop: str
     variety: str
     score: float
 
 
-# Returns the top five crop + variety recommendations.
-def get_top_recommendations(data: CropRequest):
-    # TEMPORARY INTEGRATION DATA.
-    #
-    # Replace only this function with your teammate's
-    # trained-model logic when the model is ready.
-    #
-    # The Flutter application already expects this response structure:
-    #
-    # crop
-    # variety
-    # score
-    #
-    # No Flutter UI changes will be required when the
-    # real model is connected.
+# Dynamically translate text returned by the model.
+def translate_crop_text(text: str, lang: str) -> str:
+    if not text or lang == "en":
+        return text
 
+    try:
+        return translate_text(
+            text,
+            target_language=lang,
+        )
+    except Exception as error:
+        print(f"Crop translation error: {error}")
+        return text
+
+
+# Temporary recommendations.
+# Replace this function with your trained-model logic later.
+def get_top_recommendations(data: CropRequest):
     return [
         {
             "crop": "Soybean",
@@ -72,13 +75,33 @@ def get_top_recommendations(data: CropRequest):
     ]
 
 
-# Creates the Crop Recommendation endpoint.
 @router.post("/recommend")
-def recommend_crop(data: CropRequest):
-    # Gets the top five recommendations.
+def recommend_crop(
+    data: CropRequest,
+    lang: str = Query(
+        default="en",
+        pattern="^(en|mr)$",
+    ),
+):
     recommendations = get_top_recommendations(data)
 
-    # Returns a structured JSON response.
+    translated_recommendations = []
+
+    for recommendation in recommendations:
+        translated_recommendations.append(
+            {
+                "crop": translate_crop_text(
+                    recommendation["crop"],
+                    lang,
+                ),
+                "variety": translate_crop_text(
+                    recommendation["variety"],
+                    lang,
+                ),
+                "score": recommendation["score"],
+            }
+        )
+
     return {
-        "recommendations": recommendations,
+        "recommendations": translated_recommendations,
     }

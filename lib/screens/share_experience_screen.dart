@@ -4,17 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/api_service.dart';
-
-// ============================================================
-// SHARE EXPERIENCE SCREEN
-//
-// Fields:
-// - Title
-// - Crop / Topic
-// - Experience
-// - Photo (optional)
-// On success: Navigator.pop(context, true)
-// The Knowledge Hub then reloads and shows the new experience.
+import '../l10n/app_localizations.dart';
 
 class ShareExperienceScreen extends StatefulWidget {
   const ShareExperienceScreen({super.key});
@@ -46,10 +36,9 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
     super.dispose();
   }
 
-  // ==========================================================
-  // PHOTO (OPTIONAL)
-
   Future<void> pickPhoto(ImageSource source) async {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     try {
       final XFile? picked = await picker.pickImage(
         source: source,
@@ -57,26 +46,24 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
         imageQuality: 85,
       );
 
-      if (picked == null || !mounted) {
-        return;
-      }
+      if (picked == null || !mounted) return;
 
       setState(() {
         photo = File(picked.path);
+        errorMessage = null;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
-        errorMessage =
-            'Could not open the camera or gallery. Please check app permissions.';
+        errorMessage = l10n.photoPickerError;
       });
     }
   }
 
   void choosePhotoSource() {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.white,
@@ -94,7 +81,7 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                   Icons.photo_camera_outlined,
                   color: Color(0xFF168A52),
                 ),
-                title: const Text('Take Photo'),
+                title: Text(l10n.takePhoto),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   pickPhoto(ImageSource.camera);
@@ -105,7 +92,7 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                   Icons.photo_library_outlined,
                   color: Color(0xFF168A52),
                 ),
-                title: const Text('Choose from Gallery'),
+                title: Text(l10n.chooseFromGallery),
                 onTap: () {
                   Navigator.pop(sheetContext);
                   pickPhoto(ImageSource.gallery);
@@ -119,19 +106,12 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
     );
   }
 
-  // ==========================================================
-  // SUBMIT -> FastAPI -> database
-
   Future<void> submit() async {
     FocusScope.of(context).unfocus();
 
-    if (isSubmitting) {
-      return;
-    }
+    if (isSubmitting) return;
 
-    if (!formKey.currentState!.validate()) {
-      return;
-    }
+    if (!formKey.currentState!.validate()) return;
 
     setState(() {
       isSubmitting = true;
@@ -140,22 +120,16 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
 
     try {
       await ApiService.shareExperience(
-        title: titleController.text,
-        topic: topicController.text,
-        content: experienceController.text,
+        title: titleController.text.trim(),
+        topic: topicController.text.trim(),
+        content: experienceController.text.trim(),
         photo: photo,
       );
 
-      if (!mounted) {
-        return;
-      }
-
-      // Back to Knowledge Hub.
+      if (!mounted) return;
       Navigator.pop(context, true);
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         errorMessage = friendlyError(error);
@@ -172,36 +146,37 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
   String friendlyError(Object error) {
     final String message =
         error.toString().replaceFirst('Exception: ', '');
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
 
     if (message.contains('SocketException') ||
         message.contains('ClientException') ||
         message.contains('Connection refused') ||
         message.contains('Failed host lookup')) {
-      return 'Unable to connect to AgriGuide server. '
-          'Please check your internet connection.';
+      return l10n.shareExperienceConnectionError;
     }
 
     if (message.contains('TimeoutException')) {
-      return 'The request took too long. Please try again.';
+      return l10n.shareExperienceTimeoutError;
     }
 
+    // Preserve backend-provided validation messages rather than hiding
+    // potentially useful information from the user.
     return message;
   }
 
-  // ==========================================================
-  // BUILD
-
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8F2),
       appBar: AppBar(
         backgroundColor: const Color(0xFF168A52),
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Share Experience',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          l10n.shareExperience,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       body: SafeArea(
@@ -213,10 +188,9 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tell other farmers what you learned. '
-                  'Everyone using AgriGuide can read your experience.',
-                  style: TextStyle(
+                Text(
+                  l10n.shareExperienceIntro,
+                  style: const TextStyle(
                     fontSize: 12,
                     height: 1.5,
                     color: Color(0xFF748078),
@@ -232,15 +206,15 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                 // TITLE
                 buildField(
                   controller: titleController,
-                  label: 'Title',
-                  hint: 'e.g. How I controlled leaf spot on tomato',
+                  label: l10n.postTitle,
+                  hint: l10n.shareExperienceTitleHint,
                   icon: Icons.title_rounded,
                   maxLength: 120,
                   validator: (value) {
                     final String text = value?.trim() ?? '';
 
                     if (text.length < 3) {
-                      return 'Please enter a title (at least 3 characters).';
+                      return l10n.shareExperienceTitleValidation;
                     }
 
                     return null;
@@ -251,13 +225,13 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                 // CROP / TOPIC
                 buildField(
                   controller: topicController,
-                  label: 'Crop / Topic',
-                  hint: 'e.g. Tomato, Drip irrigation',
+                  label: l10n.cropTopic,
+                  hint: l10n.shareExperienceTopicHint,
                   icon: Icons.eco_outlined,
                   maxLength: 80,
                   validator: (value) {
                     if ((value?.trim() ?? '').isEmpty) {
-                      return 'Please enter the crop or topic.';
+                      return l10n.shareExperienceTopicValidation;
                     }
 
                     return null;
@@ -268,8 +242,8 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                 // EXPERIENCE
                 buildField(
                   controller: experienceController,
-                  label: 'Your Experience',
-                  hint: 'Write what you did and what happened',
+                  label: l10n.yourExperience,
+                  hint: l10n.shareExperienceContentHint,
                   icon: Icons.edit_note_rounded,
                   maxLength: 5000,
                   minLines: 6,
@@ -279,7 +253,7 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                     final String text = value?.trim() ?? '';
 
                     if (text.length < 20) {
-                      return 'Please write a little more (at least 20 characters).';
+                      return l10n.shareExperienceContentValidation;
                     }
 
                     return null;
@@ -288,9 +262,9 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                 const SizedBox(height: 8),
 
                 // PHOTO (OPTIONAL)
-                const Text(
-                  'Photo (optional)',
-                  style: TextStyle(
+                Text(
+                  l10n.photoOptional,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF4F5F55),
@@ -315,14 +289,19 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: isSubmitting ? null : choosePhotoSource,
+                        onPressed:
+                            isSubmitting ? null : choosePhotoSource,
                         icon: const Icon(Icons.add_a_photo_outlined),
                         label: Text(
-                          photo == null ? 'Add Photo' : 'Change Photo',
+                          photo == null
+                              ? l10n.addPhoto
+                              : l10n.changePhoto,
                         ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF168A52),
-                          side: const BorderSide(color: Color(0xFF168A52)),
+                          side: const BorderSide(
+                            color: Color(0xFF168A52),
+                          ),
                           minimumSize: const Size.fromHeight(48),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
@@ -333,7 +312,7 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                     if (photo != null) ...[
                       const SizedBox(width: 8),
                       IconButton(
-                        tooltip: 'Remove photo',
+                        tooltip: l10n.removePhoto,
                         onPressed: isSubmitting
                             ? null
                             : () {
@@ -378,14 +357,14 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
                               ),
                             ),
                           )
-                        : const Row(
+                        : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.send_rounded),
-                              SizedBox(width: 9),
+                              const Icon(Icons.send_rounded),
+                              const SizedBox(width: 9),
                               Text(
-                                'Submit Experience',
-                                style: TextStyle(
+                                l10n.submitExperience,
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -401,9 +380,6 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
       ),
     );
   }
-
-  // ==========================================================
-  // ERROR BOX (same style as the login screen)
 
   Widget buildErrorBox(String message) {
     return Container(
@@ -438,9 +414,6 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
     );
   }
 
-  // ==========================================================
-  // FORM FIELD (same style as the login screen)
-
   Widget buildField({
     required TextEditingController controller,
     required String label,
@@ -471,7 +444,10 @@ class _ShareExperienceScreenState extends State<ShareExperienceScreen> {
         labelText: label,
         hintText: hint,
         alignLabelWithHint: maxLines > 1,
-        prefixIcon: Icon(icon, color: const Color(0xFF4B8650)),
+        prefixIcon: Icon(
+          icon,
+          color: const Color(0xFF4B8650),
+        ),
         filled: true,
         fillColor: const Color(0xFFFAFBF8),
         contentPadding: const EdgeInsets.symmetric(

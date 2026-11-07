@@ -695,12 +695,6 @@ abstract class AppLocalizations {
   /// **'Choose Image Source'**
   String get chooseImageSource;
 
-  /// No description provided for @takePhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Take a Photo'**
-  String get takePhoto;
-
   /// No description provided for @takePhotoSubtitle.
   ///
   /// In en, this message translates to:
@@ -1342,6 +1336,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Farming Assistant'**
   String get agriAssistant;
+
+  /// No description provided for @welcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get welcomeBack;
+
+  /// No description provided for @createYourAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your Account'**
+  String get createYourAccount;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get emailAddress;
+
+  /// No description provided for @enterYourEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email address'**
+  String get enterYourEmailAddress;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Login to access your AgriGuide account.'**
+  String get loginSubtitle;
+
+  /// No description provided for @createAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account to keep your farm records private.'**
+  String get createAccountSubtitle;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fullName;
+
+  /// No description provided for @enterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get enterFullName;
+
+  /// No description provided for @pleaseEnterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your full name.'**
+  String get pleaseEnterFullName;
+
+  /// No description provided for @nameMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must contain at least 2 characters.'**
+  String get nameMinLength;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get enterPassword;
+
+  /// No description provided for @createPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a password'**
+  String get createPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @reenterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter your password'**
+  String get reenterPassword;
+
+  /// No description provided for @pleaseEnterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address.'**
+  String get pleaseEnterEmail;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get invalidEmail;
+
+  /// No description provided for @pleaseEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password.'**
+  String get pleaseEnterPassword;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must contain at least 8 characters.'**
+  String get passwordMinLength;
+
+  /// No description provided for @pleaseConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please confirm your password.'**
+  String get pleaseConfirmPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @loginButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get loginButton;
+
+  /// No description provided for @createAccountButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get createAccountButton;
+
+  /// No description provided for @dontHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get dontHaveAccount;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @accountAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists.'**
+  String get accountAlreadyExists;
+
+  /// No description provided for @incorrectCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or password is incorrect.'**
+  String get incorrectCredentials;
+
+  /// No description provided for @unableConnectServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to AgriGuide server. Please make sure the backend is running.'**
+  String get unableConnectServer;
+
+  /// No description provided for @loginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please check your details and try again.'**
+  String get loginFailed;
+
+  /// No description provided for @registrationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration failed. Please check your details and try again.'**
+  String get registrationFailed;
+
+  /// No description provided for @secureSessionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account session is stored securely.'**
+  String get secureSessionNote;
+
+  /// No description provided for @shareExperienceIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell other farmers what you learned. Everyone using AgriGuide can read your experience.'**
+  String get shareExperienceIntro;
+
+  /// No description provided for @shareExperienceTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. How I controlled leaf spot on tomato'**
+  String get shareExperienceTitleHint;
+
+  /// No description provided for @shareExperienceTopicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Tomato, Drip irrigation'**
+  String get shareExperienceTopicHint;
+
+  /// No description provided for @shareExperienceContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write what you did and what happened'**
+  String get shareExperienceContentHint;
+
+  /// No description provided for @yourExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Experience'**
+  String get yourExperience;
+
+  /// No description provided for @cropTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop / Topic'**
+  String get cropTopic;
+
+  /// No description provided for @photoOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo (optional)'**
+  String get photoOptional;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Photo'**
+  String get addPhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Photo'**
+  String get changePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @submitExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Experience'**
+  String get submitExperience;
+
+  /// No description provided for @photoPickerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the camera or gallery. Please check app permissions.'**
+  String get photoPickerError;
+
+  /// No description provided for @shareExperienceTitleValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title (at least 3 characters).'**
+  String get shareExperienceTitleValidation;
+
+  /// No description provided for @shareExperienceTopicValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the crop or topic.'**
+  String get shareExperienceTopicValidation;
+
+  /// No description provided for @shareExperienceContentValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write a little more (at least 20 characters).'**
+  String get shareExperienceContentValidation;
+
+  /// No description provided for @shareExperienceConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to AgriGuide server. Please check your internet connection.'**
+  String get shareExperienceConnectionError;
+
+  /// No description provided for @shareExperienceTimeoutError.
+  ///
+  /// In en, this message translates to:
+  /// **'The request took too long. Please try again.'**
+  String get shareExperienceTimeoutError;
 
   /// No description provided for @openSettings.
   ///

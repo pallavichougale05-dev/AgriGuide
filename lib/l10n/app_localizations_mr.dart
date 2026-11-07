@@ -9,13 +9,13 @@ class AppLocalizationsMr extends AppLocalizations {
   AppLocalizationsMr([String locale = 'mr']) : super(locale);
 
   @override
-  String get appTitle => 'अॅग्रीगाइड';
+  String get appTitle => 'ॲग्रीगाईड';
 
   @override
-  String get homeTitle => 'अॅग्रीगाइड होम';
+  String get homeTitle => 'ॲग्रीगाईड होम';
 
   @override
-  String get homeWelcome => 'अॅग्रीगाइडमध्ये स्वागत आहे';
+  String get homeWelcome => 'ॲग्रीगाईड मध्ये स्वागत आहे';
 
   @override
   String get homeSubtitle => 'तुमच्या शेतीसाठी स्मार्ट शेती सहाय्य';
@@ -126,7 +126,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get farmActivityAdvice => 'शेतीच्या कामासाठी मार्गदर्शन';
 
   @override
-  String get weatherDataNote => 'हवामानाची माहिती अॅग्रीगाइड बॅकएंडद्वारे मिळवली जाते.';
+  String get weatherDataNote => 'हवामानाची माहिती ॲग्रीगाईड बॅकएंडद्वारे मिळवली जाते.';
 
   @override
   String get today => 'आज';
@@ -307,9 +307,6 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get chooseImageSource => 'फोटोचा स्रोत निवडा';
-
-  @override
-  String get takePhoto => 'फोटो काढा';
 
   @override
   String get takePhotoSubtitle => 'कॅमेराचा वापर करून पिकाचा फोटो काढा';
@@ -631,6 +628,156 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get agriAssistant => 'शेती सहाय्यक';
+
+  @override
+  String get welcomeBack => 'पुन्हा स्वागत आहे';
+
+  @override
+  String get createYourAccount => 'तुमचे खाते तयार करा';
+
+  @override
+  String get emailAddress => 'ईमेल पत्ता';
+
+  @override
+  String get enterYourEmailAddress => 'तुमचा ईमेल पत्ता टाका';
+
+  @override
+  String get loginSubtitle => 'तुमच्या AgriGuide खात्यात प्रवेश करण्यासाठी लॉगिन करा.';
+
+  @override
+  String get createAccountSubtitle => 'तुमच्या शेतीच्या नोंदी सुरक्षित ठेवण्यासाठी खाते तयार करा.';
+
+  @override
+  String get fullName => 'पूर्ण नाव';
+
+  @override
+  String get enterFullName => 'तुमचे पूर्ण नाव टाका';
+
+  @override
+  String get pleaseEnterFullName => 'कृपया तुमचे पूर्ण नाव टाका.';
+
+  @override
+  String get nameMinLength => 'नावात किमान 2 अक्षरे असावीत.';
+
+  @override
+  String get password => 'पासवर्ड';
+
+  @override
+  String get enterPassword => 'तुमचा पासवर्ड टाका';
+
+  @override
+  String get createPassword => 'पासवर्ड तयार करा';
+
+  @override
+  String get confirmPassword => 'पासवर्डची पुष्टी करा';
+
+  @override
+  String get reenterPassword => 'तुमचा पासवर्ड पुन्हा टाका';
+
+  @override
+  String get pleaseEnterEmail => 'कृपया तुमचा ईमेल पत्ता टाका.';
+
+  @override
+  String get invalidEmail => 'कृपया वैध ईमेल पत्ता टाका.';
+
+  @override
+  String get pleaseEnterPassword => 'कृपया तुमचा पासवर्ड टाका.';
+
+  @override
+  String get passwordMinLength => 'पासवर्डमध्ये किमान 8 अक्षरे असावीत.';
+
+  @override
+  String get pleaseConfirmPassword => 'कृपया तुमच्या पासवर्डची पुष्टी करा.';
+
+  @override
+  String get passwordsDoNotMatch => 'पासवर्ड जुळत नाहीत.';
+
+  @override
+  String get loginButton => 'लॉगिन';
+
+  @override
+  String get createAccountButton => 'खाते तयार करा';
+
+  @override
+  String get dontHaveAccount => 'तुमचे खाते नाही का?';
+
+  @override
+  String get alreadyHaveAccount => 'तुमचे आधीपासून खाते आहे का?';
+
+  @override
+  String get register => 'नोंदणी करा';
+
+  @override
+  String get accountAlreadyExists => 'या ईमेलसह खाते आधीपासून अस्तित्वात आहे.';
+
+  @override
+  String get incorrectCredentials => 'ईमेल किंवा पासवर्ड चुकीचा आहे.';
+
+  @override
+  String get unableConnectServer => 'AgriGuide सर्व्हरशी संपर्क साधता आला नाही. कृपया बॅकएंड सुरू असल्याची खात्री करा.';
+
+  @override
+  String get loginFailed => 'लॉगिन अयशस्वी झाले. कृपया तुमची माहिती तपासा आणि पुन्हा प्रयत्न करा.';
+
+  @override
+  String get registrationFailed => 'नोंदणी अयशस्वी झाली. कृपया तुमची माहिती तपासा आणि पुन्हा प्रयत्न करा.';
+
+  @override
+  String get secureSessionNote => 'तुमचे खाते सत्र सुरक्षितपणे साठवले जाते.';
+
+  @override
+  String get shareExperienceIntro => 'तुम्ही शिकलेला अनुभव इतर शेतकऱ्यांसोबत शेअर करा. AgriGuide वापरणारे सर्वजण तुमचा अनुभव वाचू शकतात.';
+
+  @override
+  String get shareExperienceTitleHint => 'उदा. टोमॅटोवरील पानांवरील डागांचे नियंत्रण कसे केले';
+
+  @override
+  String get shareExperienceTopicHint => 'उदा. टोमॅटो, ठिबक सिंचन';
+
+  @override
+  String get shareExperienceContentHint => 'तुम्ही काय केले आणि त्याचा काय परिणाम झाला ते लिहा';
+
+  @override
+  String get yourExperience => 'तुमचा अनुभव';
+
+  @override
+  String get cropTopic => 'पीक / विषय';
+
+  @override
+  String get photoOptional => 'फोटो (पर्यायी)';
+
+  @override
+  String get addPhoto => 'फोटो जोडा';
+
+  @override
+  String get changePhoto => 'फोटो बदला';
+
+  @override
+  String get removePhoto => 'फोटो काढून टाका';
+
+  @override
+  String get takePhoto => 'फोटो काढा';
+
+  @override
+  String get submitExperience => 'अनुभव सबमिट करा';
+
+  @override
+  String get photoPickerError => 'कॅमेरा किंवा गॅलरी उघडता आली नाही. कृपया ॲपच्या परवानग्या तपासा.';
+
+  @override
+  String get shareExperienceTitleValidation => 'कृपया किमान 3 अक्षरांचे शीर्षक लिहा.';
+
+  @override
+  String get shareExperienceTopicValidation => 'कृपया पीक किंवा विषय लिहा.';
+
+  @override
+  String get shareExperienceContentValidation => 'कृपया किमान 20 अक्षरांचा अनुभव लिहा.';
+
+  @override
+  String get shareExperienceConnectionError => 'AgriGuide सर्व्हरशी संपर्क साधता आला नाही. कृपया इंटरनेट कनेक्शन तपासा.';
+
+  @override
+  String get shareExperienceTimeoutError => 'विनंतीसाठी खूप वेळ लागला. कृपया पुन्हा प्रयत्न करा.';
 
   @override
   String get openSettings => 'सेटिंग्ज उघडा';

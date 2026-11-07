@@ -6,7 +6,6 @@ import 'auth_screen.dart';
 
 // ============================================================
 // DIARY ENTRY MODEL
-// ============================================================
 
 class DiaryEntry {
   final int id;
@@ -194,10 +193,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  // ==========================================================
   // LOAD DIARY ENTRIES
-  // ==========================================================
-
   Future<void> loadDiaryEntries() async {
     if (!mounted) {
       return;
@@ -249,18 +245,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  // ==========================================================
   // LOAD MY SHARED EXPERIENCES
-  // ==========================================================
-  //
-  // Requests the experiences in the language the app is
-  // showing right now (lang=en or lang=mr).
-  //
-  // If the user switches language while a request is still
-  // running, the late response is ignored so an old-language
-  // list never replaces the new one.
-  // ==========================================================
-
   Future<void> loadMyExperiences() async {
     if (!mounted || !isLoggedIn) return;
 
@@ -309,10 +294,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  // ==========================================================
   // REFRESH DIARY
-  // ==========================================================
-
   Future<void> refreshDiary() async {
     if (!isLoggedIn) {
       return;
@@ -322,9 +304,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     await loadMyExperiences();
   }
 
-  // ==========================================================
   // LOGOUT
-  // ==========================================================
 
   Future<void> logout() async {
     await ApiService.logout();
@@ -341,9 +321,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     });
   }
 
-  // ==========================================================
   // ADD DIARY ENTRY
-  // ==========================================================
 
   Future<void> showAddEntrySheet() async {
     if (!isLoggedIn) {
@@ -378,9 +356,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // DELETE MY SHARED EXPERIENCE
-  // ==========================================================
 
   Future<void> confirmDeleteExperience(
     ExperienceModel experience,

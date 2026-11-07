@@ -309,9 +309,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseImageSource => 'Choose Image Source';
 
   @override
-  String get takePhoto => 'Take a Photo';
-
-  @override
   String get takePhotoSubtitle => 'Use the camera to capture a crop image';
 
   @override
@@ -631,6 +628,156 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agriAssistant => 'Farming Assistant';
+
+  @override
+  String get welcomeBack => 'Welcome Back';
+
+  @override
+  String get createYourAccount => 'Create Your Account';
+
+  @override
+  String get emailAddress => 'Email Address';
+
+  @override
+  String get enterYourEmailAddress => 'Enter your email address';
+
+  @override
+  String get loginSubtitle => 'Login to access your AgriGuide account.';
+
+  @override
+  String get createAccountSubtitle => 'Create an account to keep your farm records private.';
+
+  @override
+  String get fullName => 'Full Name';
+
+  @override
+  String get enterFullName => 'Enter your full name';
+
+  @override
+  String get pleaseEnterFullName => 'Please enter your full name.';
+
+  @override
+  String get nameMinLength => 'Name must contain at least 2 characters.';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get enterPassword => 'Enter your password';
+
+  @override
+  String get createPassword => 'Create a password';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get reenterPassword => 'Re-enter your password';
+
+  @override
+  String get pleaseEnterEmail => 'Please enter your email address.';
+
+  @override
+  String get invalidEmail => 'Please enter a valid email address.';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter your password.';
+
+  @override
+  String get passwordMinLength => 'Password must contain at least 8 characters.';
+
+  @override
+  String get pleaseConfirmPassword => 'Please confirm your password.';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match.';
+
+  @override
+  String get loginButton => 'Login';
+
+  @override
+  String get createAccountButton => 'Create Account';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get register => 'Register';
+
+  @override
+  String get accountAlreadyExists => 'An account with this email already exists.';
+
+  @override
+  String get incorrectCredentials => 'Email or password is incorrect.';
+
+  @override
+  String get unableConnectServer => 'Unable to connect to AgriGuide server. Please make sure the backend is running.';
+
+  @override
+  String get loginFailed => 'Login failed. Please check your details and try again.';
+
+  @override
+  String get registrationFailed => 'Registration failed. Please check your details and try again.';
+
+  @override
+  String get secureSessionNote => 'Your account session is stored securely.';
+
+  @override
+  String get shareExperienceIntro => 'Tell other farmers what you learned. Everyone using AgriGuide can read your experience.';
+
+  @override
+  String get shareExperienceTitleHint => 'e.g. How I controlled leaf spot on tomato';
+
+  @override
+  String get shareExperienceTopicHint => 'e.g. Tomato, Drip irrigation';
+
+  @override
+  String get shareExperienceContentHint => 'Write what you did and what happened';
+
+  @override
+  String get yourExperience => 'Your Experience';
+
+  @override
+  String get cropTopic => 'Crop / Topic';
+
+  @override
+  String get photoOptional => 'Photo (optional)';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get changePhoto => 'Change Photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get submitExperience => 'Submit Experience';
+
+  @override
+  String get photoPickerError => 'Could not open the camera or gallery. Please check app permissions.';
+
+  @override
+  String get shareExperienceTitleValidation => 'Please enter a title (at least 3 characters).';
+
+  @override
+  String get shareExperienceTopicValidation => 'Please enter the crop or topic.';
+
+  @override
+  String get shareExperienceContentValidation => 'Please write a little more (at least 20 characters).';
+
+  @override
+  String get shareExperienceConnectionError => 'Unable to connect to AgriGuide server. Please check your internet connection.';
+
+  @override
+  String get shareExperienceTimeoutError => 'The request took too long. Please try again.';
 
   @override
   String get openSettings => 'Open Settings';

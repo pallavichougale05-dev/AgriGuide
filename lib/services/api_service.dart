@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 
-// ============================================================
 // AGRIGUIDE API SERVICE
 
 class ApiService {
@@ -310,19 +309,19 @@ class ApiService {
   // CROP RECOMMENDATION
   // ==========================================================
 
-  static Future<List<CropRecommendation>>
-      recommendCrops({
-    required double nitrogen,
-    required double phosphorus,
-    required double potassium,
-    required double temperature,
-    required double humidity,
-    required double ph,
-    required double rainfall,
+  static Future<List<CropRecommendation>> recommendCrops({
+  required double nitrogen,
+  required double phosphorus,
+  required double potassium,
+  required double temperature,
+  required double humidity,
+  required double ph,
+  required double rainfall,
+  String lang = 'en',
   }) async {
     final Uri url = Uri.parse(
-      '$baseUrl/crop/recommend',
-    );
+  '$baseUrl/crop/recommend?lang=$lang',
+);
 
     final http.Response response =
         await http.post(
@@ -366,70 +365,69 @@ class ApiService {
     );
   }
 
-  // ==========================================================
-  // DISEASE DETECTION
-  // ==========================================================
+// DISEASE DETECTION
 
-  static Future<DiseaseDetectionResponse>
-      detectDisease(
-    File imageFile,
-  ) async {
-    final Uri url = Uri.parse(
-      '$baseUrl/disease/detect',
+static Future<DiseaseDetectionResponse> detectDisease(
+  File imageFile, {
+  String lang = 'en',
+}) async {
+  // Pass the selected language to FastAPI.
+  final Uri url = Uri.parse(
+    '$baseUrl/disease/detect',
+  ).replace(
+    queryParameters: {
+      'lang': lang,
+    },
+  );
+
+  final http.MultipartRequest request =
+      http.MultipartRequest(
+    'POST',
+    url,
+  );
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'image',
+      imageFile.path,
+    ),
+  );
+
+  try {
+    final http.StreamedResponse streamedResponse =
+        await request.send().timeout(
+      const Duration(seconds: 30),
     );
 
-    final http.MultipartRequest request =
-        http.MultipartRequest(
-      'POST',
-      url,
+    final http.Response response =
+        await http.Response.fromStream(
+      streamedResponse,
     );
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'image',
-        imageFile.path,
-      ),
-    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data =
+          jsonDecode(response.body)
+              as Map<String, dynamic>;
 
-    try {
-      final http.StreamedResponse
-          streamedResponse =
-          await request.send().timeout(
-        const Duration(seconds: 30),
-      );
-
-      final http.Response response =
-          await http.Response.fromStream(
-        streamedResponse,
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            jsonDecode(response.body)
-                as Map<String, dynamic>;
-
-        return DiseaseDetectionResponse
-            .fromJson(data);
-      }
-
-      throw Exception(
-        'Disease API failed. '
-        'HTTP ${response.statusCode}: ${response.body}',
-      );
-    } on Exception {
-      rethrow;
-    } catch (error) {
-      if (kDebugMode) {
-        print(
-          'Disease API error: $error',
-        );
-      }
-
-      throw Exception(
-        'Unable to connect to the disease detection API.',
-      );
+      return DiseaseDetectionResponse.fromJson(data);
     }
+
+    throw Exception(
+      'Disease API failed. '
+      'HTTP ${response.statusCode}: ${response.body}',
+    );
+  } on Exception {
+    rethrow;
+  } catch (error) {
+    if (kDebugMode) {
+      print('Disease API error: $error');
+    }
+
+    throw Exception(
+      'Unable to connect to the disease detection API.',
+    );
   }
+}
 
   // ==========================================================
   // WEATHER
@@ -652,15 +650,9 @@ class ApiService {
     }
   }
 
-  // ==========================================================
   // FARM DIARY
-  // ==========================================================
-  //
   // lang is 'en' or 'mr'. The backend translates the diary
   // text for display only; the saved originals are unchanged.
-  // The timeout is longer because the first request in a new
-  // language may wait for translations.
-  // ==========================================================
 
   static Future<List<DiaryEntryModel>>
       getDiaryEntries({String lang = 'en'}) async {

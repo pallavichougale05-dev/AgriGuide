@@ -1,16 +1,18 @@
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission
-        android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Internet access for FastAPI communication -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION" />
-
+    <!-- Location permissions for Farm Weather -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:label="agriguide"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
@@ -22,17 +24,10 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
-            <!--
-                Specifies the Android theme used while
-                the Flutter application is starting.
-            -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
-            <!--
-                Makes MainActivity the launcher activity.
-            -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -40,25 +35,15 @@
 
         </activity>
 
-
-        <!--
-            Flutter uses this metadata for plugin registration.
-            Do not remove it.
-        -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
 
     </application>
 
-
-    <!--
-        Required for Flutter's text-processing functionality.
-    -->
     <queries>
         <intent>
-            <action
-                android:name="android.intent.action.PROCESS_TEXT" />
+            <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
     </queries>

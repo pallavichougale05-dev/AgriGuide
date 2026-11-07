@@ -21,24 +21,7 @@ router = APIRouter(
     tags=["Farm Diary"],
 )
 
-
-# ============================================================
 # TRANSLATION FOR DISPLAY
-# ============================================================
-#
-# The database always keeps exactly what the farmer typed.
-# Translation happens only when entries are READ with
-# ?lang=mr or ?lang=en, and nothing is written back.
-#
-#   lang=mr  English text  -> Marathi
-#   lang=en  Marathi text  -> English
-#   Text already in the requested language is left untouched.
-#
-# Order used for each text:
-#   1. built-in word list (common crops and farm activities)
-#   2. machine translation (MyMemory web service, via requests)
-#   3. if that fails, the original text
-# ============================================================
 
 DEVANAGARI = re.compile(r"[\u0900-\u097F]")
 
@@ -98,7 +81,6 @@ MYMEMORY_URL = "https://api.mymemory.translated.net/get"
 # MyMemory accepts only short texts per request, so longer notes
 # are sent in pieces of at most this many characters.
 MYMEMORY_CHUNK_SIZE = 400
-
 
 def split_for_service(text: str) -> list[str]:
     sentences = re.split(r"(?<=[.!?\u0964])\s+", text)
@@ -235,10 +217,7 @@ def warm_translations(texts, target: str) -> None:
         list(pool.map(lambda t: translate_text(t, target), pending))
 
 
-# ============================================================
 # REQUEST / RESPONSE MODELS
-# ============================================================
-
 class DiaryEntryRequest(BaseModel):
     date: datetime
     crop_field: str
@@ -257,10 +236,8 @@ class DiaryEntryResponse(BaseModel):
         from_attributes = True
 
 
-# ============================================================
 # CREATE DIARY ENTRY
 # POST /diary
-# ============================================================
 
 @router.post(
     "",
@@ -287,10 +264,8 @@ def create_diary_entry(
     return new_entry
 
 
-# ============================================================
 # GET ALL DIARY ENTRIES FOR CURRENT USER
 # GET /diary?lang=en|mr
-# ============================================================
 
 @router.get(
     "",
@@ -340,10 +315,8 @@ def get_diary_entries(
     ]
 
 
-# ============================================================
 # GET ONE DIARY ENTRY
 # GET /diary/{entry_id}
-# ============================================================
 
 @router.get(
     "/{entry_id}",
@@ -372,10 +345,8 @@ def get_diary_entry(
     return entry
 
 
-# ============================================================
 # UPDATE DIARY ENTRY
 # PUT /diary/{entry_id}
-# ============================================================
 
 @router.put(
     "/{entry_id}",
@@ -412,11 +383,8 @@ def update_diary_entry(
 
     return entry
 
-
-# ============================================================
 # DELETE DIARY ENTRY
 # DELETE /diary/{entry_id}
-# ============================================================
 
 @router.delete(
     "/{entry_id}",

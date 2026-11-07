@@ -43,10 +43,8 @@ def localize_experience(item, lang: str):
             if item.created_at else None
         ),
     }
-# ============================================================
 # GET ALL KNOWLEDGE ARTICLES
 # GET /knowledge/articles
-# ============================================================
 
 @router.get("/articles")
 def get_articles(db: Session = Depends(get_db)):
@@ -73,10 +71,8 @@ def get_articles(db: Session = Depends(get_db)):
     }
 
 
-# ============================================================
 # GET SINGLE ARTICLE
 # GET /knowledge/articles/{article_id}
-# ============================================================
 
 @router.get("/articles/{article_id}")
 def get_article(
@@ -109,7 +105,6 @@ def get_article(
 
 # GET ARTICLES BY CATEGORY
 
-
 @router.get("/categories/{category}")
 def get_articles_by_category(
     category: str,
@@ -141,7 +136,6 @@ def get_articles_by_category(
         ],
     }
 
-# ============================================================
 # GET EXPERIENCES SHARED BY THE LOGGED-IN FARMER
 # GET /knowledge/my-experiences?lang=en or ?lang=mr
 # Requires JWT authentication.
@@ -200,12 +194,9 @@ def get_my_experiences(
     }
 
 
-# ============================================================
 # DELETE A FARMER EXPERIENCE POST
 # DELETE /knowledge/experiences/{experience_id}
 # Requires JWT authentication.
-# Only the post's author can delete it.
-# ============================================================
 
 @router.delete("/experiences/{experience_id}")
 def delete_experience(
@@ -241,8 +232,6 @@ def delete_experience(
     }
 
 
-
-# ============================================================
 # GET FARMER EXPERIENCE POSTS
 # GET /knowledge/experiences
 
@@ -294,11 +283,8 @@ def get_experiences(
         "experiences": localized_experiences,
     }
 
-
-# ============================================================
 # CREATE AN EXPERIENCE POST
 # POST /knowledge/experiences
-# ============================================================
 
 @router.post("/experiences", status_code=201)
 def share_experience(

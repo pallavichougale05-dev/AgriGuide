@@ -126,6 +126,7 @@ class _CropScreenState extends State<CropScreen> {
     final double? rainfall =
         double.tryParse(rainfallController.text.trim());
 
+    
     // NUMERIC VALIDATION
 
     if (nitrogen == null ||
@@ -155,16 +156,19 @@ class _CropScreenState extends State<CropScreen> {
       // CALL BACKEND
       // ApiService handles the actual HTTP request.
 
-      final List<CropRecommendation> result =
-          await ApiService.recommendCrops(
-        nitrogen: nitrogen,
-        phosphorus: phosphorus,
-        potassium: potassium,
-        temperature: temperature,
-        humidity: humidity,
-        ph: ph,
-        rainfall: rainfall,
-      );
+      final String lang =
+    Localizations.localeOf(context).languageCode;
+
+    final result = await ApiService.recommendCrops(
+      nitrogen: nitrogen,
+      phosphorus: phosphorus,
+      potassium: potassium,
+      temperature: temperature,
+      humidity: humidity,
+      ph: ph,
+      rainfall: rainfall,
+      lang: lang,
+    );
 
       if (!mounted) {
         return;
@@ -973,48 +977,6 @@ class _CropScreenState extends State<CropScreen> {
 
           const SizedBox(
             height: 14,
-          ),
-
-          // INFO STRIP
-
-          Container(
-            width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color:
-                  const Color(0xFFF4F8F1),
-              borderRadius:
-                  BorderRadius.circular(13),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.check_circle_outline_rounded,
-                  size: 18,
-                  color: Color(0xFF4A8E50),
-                ),
-
-                const SizedBox(
-                  width: 8,
-                ),
-
-                Expanded(
-                  child: Text(
-                    l10n.suitableCropInfo,
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      height: 1.3,
-                      color:
-                          Color(0xFF637065),
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

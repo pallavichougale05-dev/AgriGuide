@@ -5,85 +5,24 @@ import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 
 
-// ============================================================
-// FARM WEATHER SCREEN
-// ============================================================
-//
-// PURPOSE:
-//
-// Shows weather information for the farmer's selected location.
-//
-// LOCATION OPTIONS:
-//
-// 1. GPS
-//    Phone location
-//       ↓
-//    Latitude + Longitude
-//       ↓
-//    FastAPI
-//       ↓
-//    Weather
-//
-// 2. MANUAL SEARCH
-//    Farmer types a location
-//       ↓
-//    FastAPI location search
-//       ↓
-//    Location results
-//       ↓
-//    Farmer selects location
-//       ↓
-//    Latitude + Longitude
-//       ↓
-//    FastAPI
-//       ↓
-//    Weather
-//
-// LOCALIZATION:
-//
-// The screen supports:
-// English
-// Marathi
-//
-// UI labels come from AppLocalizations.
-//
-// Dynamic weather conditions and farm advice are also
-// translated according to the selected language.
-//
-// ============================================================
-
-
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
 
   // Creates the mutable state for the Weather screen.
-  //
   // Weather and location can change while the screen is open.
   @override
   State<WeatherScreen> createState() => _WeatherScreenState();
 }
 
-
-// ============================================================
 // WEATHER SCREEN STATE
-// ============================================================
 
 class _WeatherScreenState extends State<WeatherScreen> {
 
-  // ----------------------------------------------------------
   // WEATHER DATA
-  // ----------------------------------------------------------
-
   // Stores the weather returned by FastAPI.
   WeatherData? weatherData;
 
-
-  // ----------------------------------------------------------
-  // LOCATION
-  // ----------------------------------------------------------
-
-  // Default latitude.
-  //
+  // LOCATION  Default latitude.
   // Kolhapur is used when the screen first opens.
   double selectedLatitude = 16.70;
 
@@ -93,22 +32,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
   // Text displayed to the farmer.
   String selectedLocationName = 'Kolhapur, Maharashtra';
 
-
-  // ----------------------------------------------------------
   // LOADING / ERROR
-  // ----------------------------------------------------------
-
   // True while weather is being fetched.
   bool isLoading = true;
 
   // Error message shown when something fails.
   String? errorMessage;
 
-
-  // ==========================================================
   // INITIAL LOAD
-  // ==========================================================
-
   @override
   void initState() {
     super.initState();
@@ -118,17 +49,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
     loadWeather();
   }
 
-
-  // ==========================================================
   // LOAD WEATHER
-  // ==========================================================
 
   Future<void> loadWeather() async {
 
-    // --------------------------------------------------------
     // SHOW LOADING STATE
-    // --------------------------------------------------------
-
     if (mounted) {
       setState(() {
         isLoading = true;
@@ -139,36 +64,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
     try {
 
-      // ------------------------------------------------------
       // SEND SELECTED COORDINATES TO APISERVICE
-      // ------------------------------------------------------
-      //
-      // ApiService sends:
-      //
-      // GET /weather/current
-      //
-      // with latitude and longitude.
-      // ------------------------------------------------------
-
       final WeatherData data = await ApiService.getWeather(
         latitude: selectedLatitude,
         longitude: selectedLongitude,
       );
 
-
-      // ------------------------------------------------------
       // PREVENT UPDATING CLOSED SCREEN
-      // ------------------------------------------------------
-
       if (!mounted) {
         return;
       }
 
-
-      // ------------------------------------------------------
       // SAVE WEATHER DATA
-      // ------------------------------------------------------
-
       setState(() {
         weatherData = data;
         isLoading = false;
@@ -177,18 +84,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
     } catch (error) {
 
-      // ------------------------------------------------------
       // PREVENT UPDATING CLOSED SCREEN
-      // ------------------------------------------------------
-
       if (!mounted) {
         return;
       }
-
-
-      // ------------------------------------------------------
       // USER-FRIENDLY ERROR
-      // ------------------------------------------------------
 
       final l10n = AppLocalizations.of(context)!;
 
@@ -200,21 +100,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
 
-
-  // ==========================================================
   // GET CURRENT GPS LOCATION
-  // ==========================================================
 
   Future<void> useCurrentLocation() async {
 
     final l10n = AppLocalizations.of(context)!;
 
     try {
-
-      // ------------------------------------------------------
       // CHECK LOCATION SERVICE
-      // ------------------------------------------------------
-
       // Checks whether GPS/location services are enabled.
       final bool serviceEnabled =
           await Geolocator.isLocationServiceEnabled();
@@ -233,32 +126,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
         return;
       }
 
-
-      // ------------------------------------------------------
       // CHECK PERMISSION
-      // ------------------------------------------------------
-
       final LocationPermission permission =
           await Geolocator.checkPermission();
 
       LocationPermission currentPermission = permission;
 
-
-      // ------------------------------------------------------
       // ASK FOR PERMISSION
-      // ------------------------------------------------------
-
       if (currentPermission == LocationPermission.denied) {
 
         currentPermission =
             await Geolocator.requestPermission();
       }
 
-
-      // ------------------------------------------------------
       // PERMISSION DENIED
-      // ------------------------------------------------------
-
       if (currentPermission == LocationPermission.denied) {
 
         if (!mounted) {
@@ -268,32 +149,20 @@ class _WeatherScreenState extends State<WeatherScreen> {
         showLocationMessage(
           l10n.locationPermissionRequired,
         );
-
         return;
       }
 
-
-      // ------------------------------------------------------
-      // PERMANENTLY DENIED
-      // ------------------------------------------------------
-
-      if (currentPermission ==
+      if (currentPermission ==      // PERMANENTLY DENIED
           LocationPermission.deniedForever) {
 
         if (!mounted) {
           return;
         }
-
         showLocationPermissionSettingsMessage();
-
         return;
       }
 
-
-      // ------------------------------------------------------
       // GET GPS POSITION
-      // ------------------------------------------------------
-
       // High accuracy gives better coordinates for weather.
       final Position position =
           await Geolocator.getCurrentPosition(
@@ -305,36 +174,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
         ),
       );
 
-
-      // ------------------------------------------------------
-      // SAVE LOCATION
-      // ------------------------------------------------------
-
-      if (!mounted) {
+      if (!mounted) {      // SAVE LOCATION
         return;
       }
-
-
       setState(() {
 
-        // Save GPS latitude.
-        selectedLatitude = position.latitude;
+        selectedLatitude = position.latitude;        // Save GPS latitude.
 
-        // Save GPS longitude.
-        selectedLongitude = position.longitude;
+        selectedLongitude = position.longitude;        // Save GPS longitude.
 
-        // Display GPS label.
-        selectedLocationName = l10n.currentLocation;
+        selectedLocationName = l10n.currentLocation;        // Display GPS label.
 
-        // Clear previous error.
-        errorMessage = null;
+        errorMessage = null;        // Clear previous error.
       });
 
-
-      // ------------------------------------------------------
       // LOAD WEATHER FOR GPS LOCATION
-      // ------------------------------------------------------
-
       await loadWeather();
 
     } catch (error) {
@@ -343,11 +197,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         return;
       }
 
-
-      // ------------------------------------------------------
       // USER-FRIENDLY LOCATION ERROR
-      // ------------------------------------------------------
-
       setState(() {
         errorMessage = l10n.unableGetLocation;
       });
@@ -364,18 +214,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
 
-
-  // ==========================================================
   // LOCATION SEARCH
-  // ==========================================================
 
   void openLocationSearch() {
 
     showModalBottomSheet<void>(
       context: context,
 
-      // Allows sheet to move above keyboard.
-      isScrollControlled: true,
+      isScrollControlled: true,      // Allows sheet to move above keyboard.
 
       backgroundColor: Colors.transparent,
 
@@ -385,18 +231,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
           onLocationSelected:
               (LocationSearchResult result) async {
 
-            // Close search sheet.
-            Navigator.pop(context);
+            Navigator.pop(context);            // Close search sheet.
 
 
             if (!mounted) {
               return;
             }
-
-
-            // ------------------------------------------------
             // SAVE SELECTED LOCATION
-            // ------------------------------------------------
 
             setState(() {
 
@@ -408,12 +249,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
               errorMessage = null;
             });
-
-
-            // ------------------------------------------------
             // LOAD WEATHER FOR SELECTED LOCATION
-            // ------------------------------------------------
-
             await loadWeather();
           },
         );
@@ -421,11 +257,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // LOCATION MESSAGE
-  // ==========================================================
-
   void showLocationMessage(
     String message,
   ) {
@@ -439,10 +271,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // OPEN APP LOCATION SETTINGS
-  // ==========================================================
 
   void showLocationPermissionSettingsMessage() {
 
@@ -465,10 +294,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
           actions: [
 
-            // ------------------------------------------------
             // CLOSE DIALOG
-            // ------------------------------------------------
-
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -479,11 +305,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               ),
             ),
 
-
-            // ------------------------------------------------
             // OPEN APP SETTINGS
-            // ------------------------------------------------
-
             TextButton(
               onPressed: () async {
 
@@ -502,10 +324,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // BUILD
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -517,11 +336,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       backgroundColor:
           const Color(0xFFF7F8F2),
 
-
-      // ======================================================
       // APP BAR
-      // ======================================================
-
       appBar: AppBar(
 
         backgroundColor:
@@ -529,11 +344,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
         foregroundColor:
             Colors.white,
-
         elevation: 0,
-
         title: Text(
-
           l10n.farmWeather,
 
           style: const TextStyle(
@@ -542,10 +354,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         ),
 
         actions: [
-
-          // --------------------------------------------------
           // REFRESH BUTTON
-          // --------------------------------------------------
 
           IconButton(
 
@@ -565,11 +374,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         ],
       ),
 
-
-      // ======================================================
       // BODY
-      // ======================================================
-
       body:
           SafeArea(
         child:
@@ -578,51 +383,29 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // BODY STATE
-  // ==========================================================
 
   Widget buildBody() {
 
-    // --------------------------------------------------------
-    // LOADING STATE
-    // --------------------------------------------------------
+    if (isLoading) {    // LOADING STATE
 
-    if (isLoading) {
       return buildLoadingState();
     }
 
+    if (errorMessage != null) {    // ERROR STATE
 
-    // --------------------------------------------------------
-    // ERROR STATE
-    // --------------------------------------------------------
-
-    if (errorMessage != null) {
       return buildErrorState();
     }
 
-
-    // --------------------------------------------------------
-    // SAFETY FALLBACK
-    // --------------------------------------------------------
-
-    if (weatherData == null) {
+    if (weatherData == null) {    // SAFETY FALLBACK
       return buildErrorState();
     }
 
+    return buildWeatherContent();    // NORMAL WEATHER UI
 
-    // --------------------------------------------------------
-    // NORMAL WEATHER UI
-    // --------------------------------------------------------
-
-    return buildWeatherContent();
   }
 
-
-  // ==========================================================
   // LOADING STATE
-  // ==========================================================
 
   Widget buildLoadingState() {
 
@@ -660,11 +443,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // ERROR STATE
-  // ==========================================================
-
   Widget buildErrorState() {
 
     final l10n = AppLocalizations.of(context)!;
@@ -676,7 +455,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
         padding:
             const EdgeInsets.all(24),
-
         child:
             Column(
 
@@ -798,10 +576,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // COMPLETE WEATHER CONTENT
-  // ==========================================================
 
   Widget buildWeatherContent() {
 
@@ -810,7 +585,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
 
     return RefreshIndicator(
-
       // Pull down to refresh weather.
       onRefresh:
           loadWeather,
@@ -843,11 +617,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               CrossAxisAlignment.start,
 
           children: [
-
-            // ------------------------------------------------
             // LOCATION CARD
-            // ------------------------------------------------
-
             buildLocationCard(),
 
 
@@ -855,24 +625,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
               height: 16,
             ),
 
-
-            // ------------------------------------------------
             // CURRENT WEATHER
-            // ------------------------------------------------
 
             buildCurrentWeatherCard(
               current,
             ),
 
-
             const SizedBox(
               height: 20,
             ),
 
-
-            // ------------------------------------------------
             // WEATHER STATISTICS
-            // ------------------------------------------------
 
             buildWeatherStats(
               current,
@@ -904,10 +667,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               height: 12,
             ),
 
-
-            // ------------------------------------------------
             // FORECAST
-            // ------------------------------------------------
 
             buildForecastList(),
 
@@ -916,11 +676,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               height: 20,
             ),
 
-
-            // ------------------------------------------------
             // FARM ADVICE
-            // ------------------------------------------------
-
             buildFarmAdvice(
               current,
             ),
@@ -938,10 +694,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // LOCATION CARD
-  // ==========================================================
 
   Widget buildLocationCard() {
 
@@ -980,13 +733,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
             CrossAxisAlignment.start,
 
         children: [
-
-          // --------------------------------------------------
           // SELECTED LOCATION
-          // --------------------------------------------------
 
           Row(
-
             children: [
 
               Container(
@@ -1079,10 +828,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             height: 13,
           ),
 
-
-          // --------------------------------------------------
           // LOCATION ACTIONS
-          // --------------------------------------------------
 
           Row(
 
@@ -1195,10 +941,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // CURRENT WEATHER CARD
-  // ==========================================================
 
   Widget buildCurrentWeatherCard(
     CurrentWeather current,
@@ -1256,10 +999,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
             children: [
 
-              // ------------------------------------------------
               // WEATHER ICON
-              // ------------------------------------------------
-
               Container(
 
                 width: 70,
@@ -1305,10 +1045,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       CrossAxisAlignment.start,
 
                   children: [
-
-                    // ------------------------------------------------
                     // TEMPERATURE
-                    // ------------------------------------------------
 
                     Row(
 
@@ -1389,11 +1126,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             height: 17,
           ),
 
-
-          // ------------------------------------------------
           // QUICK WEATHER ADVICE
-          // ------------------------------------------------
-
           Container(
 
             width:
@@ -1461,10 +1194,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // WEATHER STATISTICS
-  // ==========================================================
 
   Widget buildWeatherStats(
   CurrentWeather current,
@@ -1541,10 +1271,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // WEATHER STAT CARD
-  // ==========================================================
 
   Widget buildWeatherStat({
 
@@ -1641,10 +1368,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // FORECAST LIST
-  // ==========================================================
 
   Widget buildForecastList() {
 
@@ -1676,19 +1400,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // FORECAST CARD
-  // ==========================================================
-
   Widget buildForecastCard(
     WeatherForecast day,
   ) {
 
     //final l10n = AppLocalizations.of(context)!;
-
     return Container(
-
       width:
           double.infinity,
 
@@ -1721,10 +1439,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
         children: [
 
-          // --------------------------------------------------
           // WEATHER ICON
-          // --------------------------------------------------
-
           Container(
 
             width: 43,
@@ -1760,11 +1475,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             width: 11,
           ),
 
-
-          // --------------------------------------------------
           // DATE + CONDITION
-          // --------------------------------------------------
-
           Expanded(
 
             child:
@@ -1819,11 +1530,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             ),
           ),
 
-
-          // --------------------------------------------------
           // RAIN PROBABILITY + TEMPERATURE
-          // --------------------------------------------------
-
           Column(
 
             crossAxisAlignment:
@@ -1894,10 +1601,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // FARM ADVICE
-  // ==========================================================
 
   Widget buildFarmAdvice(
     CurrentWeather current,
@@ -2021,11 +1725,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // DATA NOTE
-  // ==========================================================
-
   Widget buildDataNote() {
 
     final l10n = AppLocalizations.of(context)!;
@@ -2050,71 +1750,48 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-
-  // ==========================================================
   // WEATHER ICON
-  // ==========================================================
-
   IconData weatherIcon(
     int code,
   ) {
 
-    // Clear sky.
-    if (code == 0) {
+    if (code == 0) {    // Clear sky.
       return Icons.wb_sunny_rounded;
     }
 
-
-    // Mainly clear.
-    if (code == 1) {
+    if (code == 1) {    // Mainly clear.
       return Icons.wb_sunny_outlined;
     }
 
-
-    // Partly cloudy.
-    if (code == 2) {
+    if (code == 2) {    // Partly cloudy.
       return Icons.wb_cloudy_rounded;
     }
 
-
-    // Overcast.
-    if (code == 3) {
+    if (code == 3) {    // Overcast.
       return Icons.cloud_rounded;
     }
 
-
-    // Fog.
-    if (code == 45 || code == 48) {
+    if (code == 45 || code == 48) {    // Fog.
       return Icons.foggy;
     }
 
-
-    // Drizzle.
-    if (code >= 51 && code <= 57) {
+    if (code >= 51 && code <= 57) {    // Drizzle.
       return Icons.grain_rounded;
     }
 
-
-    // Rain.
-    if (code >= 61 && code <= 67) {
+    if (code >= 61 && code <= 67) {    // Rain.
       return Icons.water_drop_rounded;
     }
 
-
-    // Snow.
-    if (code >= 71 && code <= 77) {
+    if (code >= 71 && code <= 77) {   // Snow.
       return Icons.ac_unit_rounded;
     }
 
-
-    // Rain showers.
-    if (code >= 80 && code <= 82) {
+    if (code >= 80 && code <= 82) {   // Rain showers.
       return Icons.umbrella_rounded;
     }
 
-
-    // Thunderstorm.
-    if (code >= 95) {
+    if (code >= 95) {    // Thunderstorm.
       return Icons.thunderstorm_rounded;
     }
 
@@ -2122,24 +1799,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return Icons.cloud_rounded;
   }
 
-
-  // ==========================================================
   // LOCALIZED WEATHER CONDITION
-  // ==========================================================
-  //
-  // The backend weather condition may be returned in English.
-  //
-  // Instead of displaying:
-  //
-  // "Mainly Clear"
-  //
-  // directly from the backend, we use the weather code and
-  // translate the condition here.
-  //
-  // This ensures the condition changes when the app language
-  // changes.
-  //
-  // ==========================================================
 
   String localizedWeatherCondition(
     int code,
@@ -2151,108 +1811,66 @@ class _WeatherScreenState extends State<WeatherScreen> {
         Localizations.localeOf(context).languageCode == 'mr';
 
 
-    // ----------------------------------------------------------
-    // CLEAR SKY
-    // ----------------------------------------------------------
-
-    if (code == 0) {
+    if (code == 0) {    // CLEAR SKY
       return isMarathi
           ? 'स्वच्छ आकाश'
           : 'Clear Sky';
     }
 
-
-    // ----------------------------------------------------------
-    // MAINLY CLEAR
-    // ----------------------------------------------------------
-
-    if (code == 1) {
+    if (code == 1) {    // MAINLY CLEAR
       return isMarathi
           ? 'मुख्यतः स्वच्छ'
           : 'Mainly Clear';
     }
 
-
-    // ----------------------------------------------------------
-    // PARTLY CLOUDY
-    // ----------------------------------------------------------
-
-    if (code == 2) {
+    if (code == 2) {    // PARTLY CLOUDY
       return l10n.partlyCloudy;
     }
 
-
-    // ----------------------------------------------------------
-    // OVERCAST
-    // ----------------------------------------------------------
-
-    if (code == 3) {
+    if (code == 3) {    // OVERCAST
       return isMarathi
           ? 'ढगाळ'
           : 'Overcast';
     }
 
+    if (code == 45 || code == 48) {    // FOG
 
-    // ----------------------------------------------------------
-    // FOG
-    // ----------------------------------------------------------
-
-    if (code == 45 || code == 48) {
       return isMarathi
           ? 'धुके'
           : 'Fog';
     }
 
+    if (code >= 51 && code <= 57) {    // DRIZZLE
 
-    // ----------------------------------------------------------
-    // DRIZZLE
-    // ----------------------------------------------------------
-
-    if (code >= 51 && code <= 57) {
       return isMarathi
           ? 'रिमझिम पाऊस'
           : 'Drizzle';
     }
 
 
-    // ----------------------------------------------------------
-    // RAIN
-    // ----------------------------------------------------------
+    if (code >= 61 && code <= 67) {    // RAIN
 
-    if (code >= 61 && code <= 67) {
       return isMarathi
           ? 'पाऊस'
           : 'Rain';
     }
 
+    if (code >= 71 && code <= 77) {    // SNOW
 
-    // ----------------------------------------------------------
-    // SNOW
-    // ----------------------------------------------------------
-
-    if (code >= 71 && code <= 77) {
       return isMarathi
           ? 'हिमवृष्टी'
           : 'Snow';
     }
 
 
-    // ----------------------------------------------------------
-    // RAIN SHOWERS
-    // ----------------------------------------------------------
+    if (code >= 80 && code <= 82) {    // RAIN SHOWERS
 
-    if (code >= 80 && code <= 82) {
       return isMarathi
           ? 'पावसाच्या सरी'
           : 'Rain Showers';
     }
 
-
-    // ----------------------------------------------------------
-    // THUNDERSTORM
-    // ----------------------------------------------------------
-
-    if (code >= 95) {
+    if (code >= 95) {    // THUNDERSTORM
       return isMarathi
           ? 'मेघगर्जनेसह पाऊस'
           : 'Thunderstorm';
@@ -2264,11 +1882,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         : 'Weather Conditions';
   }
 
-
-  // ==========================================================
   // QUICK WEATHER ADVICE
-  // ==========================================================
-
   String weatherAdvice(
     int code,
   ) {
@@ -2276,11 +1890,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     final bool isMarathi =
         Localizations.localeOf(context).languageCode == 'mr';
 
-
-    // ----------------------------------------------------------
     // CLEAR WEATHER
-    // ----------------------------------------------------------
-
     if (code == 0 || code == 1) {
 
       return isMarathi
@@ -2288,11 +1898,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           : 'Clear conditions today. Continue normal farm activities while monitoring soil moisture.';
     }
 
-
-    // ----------------------------------------------------------
     // CLOUDY WEATHER
-    // ----------------------------------------------------------
-
     if (code == 2 || code == 3) {
 
       return isMarathi
@@ -2301,10 +1907,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
 
 
-    // ----------------------------------------------------------
     // RAIN / DRIZZLE
-    // ----------------------------------------------------------
-
     if (code >= 51 && code <= 67) {
 
       return isMarathi
@@ -2313,10 +1916,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
 
 
-    // ----------------------------------------------------------
     // RAIN SHOWERS
-    // ----------------------------------------------------------
-
     if (code >= 80 && code <= 82) {
 
       return isMarathi
@@ -2324,11 +1924,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           : 'Rain showers are possible. Plan field activities around changing conditions.';
     }
 
-
-    // ----------------------------------------------------------
     // THUNDERSTORM
-    // ----------------------------------------------------------
-
     if (code >= 95) {
 
       return isMarathi
@@ -2343,9 +1939,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 
 
-  // ==========================================================
   // FARM ACTIVITY ADVICE
-  // ==========================================================
 
   String weatherActivityAdvice(
     CurrentWeather current,
@@ -2354,11 +1948,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     final bool isMarathi =
         Localizations.localeOf(context).languageCode == 'mr';
 
-
-    // ----------------------------------------------------------
     // HIGH RAINFALL
-    // ----------------------------------------------------------
-
     if (current.rainfall > 5) {
 
       return isMarathi
@@ -2366,11 +1956,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           : 'Recent rainfall is significant. Check soil moisture before adding more irrigation.';
     }
 
-
-    // ----------------------------------------------------------
     // HIGH HUMIDITY
-    // ----------------------------------------------------------
-
     if (current.humidity > 85) {
 
       return isMarathi
@@ -2378,11 +1964,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           : 'Humidity is high. Monitor crops closely for conditions that may encourage disease development.';
     }
 
-
-    // ----------------------------------------------------------
     // STRONG WIND
-    // ----------------------------------------------------------
-
     if (current.windSpeed > 25) {
 
       return isMarathi
@@ -2396,11 +1978,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
         : 'Current conditions appear suitable for routine farm activities. Continue monitoring the field.';
   }
 
-
-  // ==========================================================
   // READABLE DATE
-  // ==========================================================
-
   String readableDate(
     String date,
   ) {
@@ -2413,15 +1991,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
       return date;
     }
 
-
     final bool isMarathi =
         Localizations.localeOf(context).languageCode == 'mr';
 
-
-    // ----------------------------------------------------------
     // MONTH NAMES
-    // ----------------------------------------------------------
-
     final List<String> englishMonths = [
       'Jan',
       'Feb',
@@ -2476,22 +2049,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 }
 
-
-// ============================================================
 // LOCATION SEARCH SHEET
-// ============================================================
-//
-// This is the manual-location search interface.
-//
-// Search text
-//     ↓
-// FastAPI /weather/search
-//     ↓
-// Location results
-//     ↓
-// Farmer selects one
-//
-// ============================================================
 
 class LocationSearchSheet extends StatefulWidget {
 
@@ -2512,11 +2070,7 @@ class LocationSearchSheet extends StatefulWidget {
       _LocationSearchSheetState();
 }
 
-
-// ============================================================
 // LOCATION SEARCH STATE
-// ============================================================
-
 class _LocationSearchSheetState
     extends State<LocationSearchSheet> {
 
@@ -2546,11 +2100,7 @@ class _LocationSearchSheetState
     super.dispose();
   }
 
-
-  // ==========================================================
   // SEARCH LOCATION
-  // ==========================================================
-
   Future<void> searchLocation() async {
 
     final l10n = AppLocalizations.of(context)!;
@@ -2572,11 +2122,7 @@ class _LocationSearchSheetState
       return;
     }
 
-
-    // --------------------------------------------------------
     // START LOADING
-    // --------------------------------------------------------
-
     setState(() {
       isSearching = true;
       errorMessage = null;
@@ -2585,11 +2131,7 @@ class _LocationSearchSheetState
 
 
     try {
-
-      // ------------------------------------------------------
       // CALL FASTAPI LOCATION SEARCH
-      // ------------------------------------------------------
-
       final List<LocationSearchResult>
           locations =
           await ApiService.searchLocations(
@@ -2601,21 +2143,13 @@ class _LocationSearchSheetState
         return;
       }
 
-
-      // ------------------------------------------------------
       // SAVE RESULTS
-      // ------------------------------------------------------
-
       setState(() {
         results = locations;
         isSearching = false;
       });
 
-
-      // ------------------------------------------------------
       // NO RESULTS
-      // ------------------------------------------------------
-
       if (locations.isEmpty) {
 
         setState(() {
@@ -2630,11 +2164,7 @@ class _LocationSearchSheetState
         return;
       }
 
-
-      // ------------------------------------------------------
       // USER-FRIENDLY SEARCH ERROR
-      // ------------------------------------------------------
-
       setState(() {
         isSearching = false;
 
@@ -2647,10 +2177,7 @@ class _LocationSearchSheetState
     }
   }
 
-
-  // ==========================================================
   // BUILD SEARCH SHEET
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -2697,10 +2224,7 @@ class _LocationSearchSheetState
 
           children: [
 
-            // ------------------------------------------------
             // DRAG HANDLE
-            // ------------------------------------------------
-
             Container(
 
               width: 38,
@@ -2723,29 +2247,20 @@ class _LocationSearchSheetState
               height: 18,
             ),
 
-
-            // ------------------------------------------------
             // HEADER
-            // ------------------------------------------------
-
             Align(
 
               alignment:
                   Alignment.centerLeft,
 
               child:
-                  Text(
-
-                l10n.searchLocation,
+                  Text( l10n.searchLocation,
 
                 style:
                     const TextStyle(
-
                   fontSize: 20,
-
                   fontWeight:
                       FontWeight.w800,
-
                   color:
                       Color(0xFF29372D),
                 ),
@@ -2759,20 +2274,14 @@ class _LocationSearchSheetState
 
 
             Align(
-
               alignment:
                   Alignment.centerLeft,
-
               child:
-                  Text(
-
-                l10n.searchLocationSubtitle,
+                  Text(l10n.searchLocationSubtitle,
 
                 style:
                     const TextStyle(
-
                   fontSize: 10.5,
-
                   color:
                       Color(0xFF7A847C),
                 ),
@@ -2784,16 +2293,11 @@ class _LocationSearchSheetState
               height: 15,
             ),
 
-
-            // ------------------------------------------------
             // SEARCH FIELD
-            // ------------------------------------------------
-
             TextField(
 
               controller:
                   searchController,
-
               autofocus:
                   true,
 
@@ -2802,7 +2306,6 @@ class _LocationSearchSheetState
 
               onSubmitted:
                   (_) => searchLocation(),
-
               decoration:
                   InputDecoration(
 
@@ -2811,9 +2314,7 @@ class _LocationSearchSheetState
 
                 hintStyle:
                     const TextStyle(
-
                   fontSize: 11,
-
                   color:
                       Color(0xFF929A93),
                 ),
@@ -2821,9 +2322,7 @@ class _LocationSearchSheetState
 
                 prefixIcon:
                     const Icon(
-
                   Icons.search_rounded,
-
                   color:
                       Color(0xFF4A8751),
                 ),
@@ -2837,17 +2336,13 @@ class _LocationSearchSheetState
                       isSearching
                           ? null
                           : searchLocation,
-
                   icon:
-
                       isSearching
 
                           ? const SizedBox(
 
                               width: 19,
-
                               height: 19,
-
                               child:
                                   CircularProgressIndicator(
                                 strokeWidth: 2.2,
@@ -2862,17 +2357,13 @@ class _LocationSearchSheetState
 
                 filled:
                     true,
-
                 fillColor:
                     const Color(0xFFF7F9F5),
 
-
                 border:
                     OutlineInputBorder(
-
                   borderRadius:
                       BorderRadius.circular(17),
-
                   borderSide:
                       const BorderSide(
                     color:
@@ -2883,10 +2374,8 @@ class _LocationSearchSheetState
 
                 enabledBorder:
                     OutlineInputBorder(
-
                   borderRadius:
                       BorderRadius.circular(17),
-
                   borderSide:
                       const BorderSide(
                     color:
@@ -2897,10 +2386,8 @@ class _LocationSearchSheetState
 
                 focusedBorder:
                     OutlineInputBorder(
-
                   borderRadius:
                       BorderRadius.circular(17),
-
                   borderSide:
                       const BorderSide(
                     color:
@@ -2916,28 +2403,18 @@ class _LocationSearchSheetState
               height: 14,
             ),
 
-
-            // ------------------------------------------------
             // ERROR
-            // ------------------------------------------------
-
             if (errorMessage != null)
 
               Container(
-
                 width:
                     double.infinity,
-
                 padding:
                     const EdgeInsets.all(12),
-
-
                 decoration:
                     BoxDecoration(
-
                   color:
                       const Color(0xFFFFF4E5),
-
                   borderRadius:
                       BorderRadius.circular(13),
                 ),
@@ -2945,14 +2422,10 @@ class _LocationSearchSheetState
 
                 child:
                     Text(
-
                   errorMessage!,
-
                   style:
                       const TextStyle(
-
                     fontSize: 10.5,
-
                     color:
                         Color(0xFF815E2F),
                   ),
@@ -2966,15 +2439,9 @@ class _LocationSearchSheetState
                 height: 10,
               ),
 
-
-            // ------------------------------------------------
             // SEARCH RESULTS
-            // ------------------------------------------------
-
             if (results.isNotEmpty)
-
               Flexible(
-
                 child:
                     ListView.separated(
 
@@ -2989,10 +2456,8 @@ class _LocationSearchSheetState
                           const SizedBox(
                     height: 8,
                   ),
-
                   itemBuilder:
                       (context, index) {
-
                     final LocationSearchResult
                         result =
                         results[index];
@@ -3010,20 +2475,14 @@ class _LocationSearchSheetState
     );
   }
 
-
-  // ==========================================================
   // LOCATION RESULT CARD
-  // ==========================================================
-
   Widget buildLocationResult(
     LocationSearchResult result,
   ) {
-
     return InkWell(
 
       // Selects this location.
       onTap: () {
-
         widget.onLocationSelected(
           result,
         );
@@ -3032,24 +2491,18 @@ class _LocationSearchSheetState
 
       borderRadius:
           BorderRadius.circular(16),
-
-
       child:
           Container(
-
         padding:
             const EdgeInsets.all(13),
 
 
         decoration:
             BoxDecoration(
-
           color:
               const Color(0xFFF8FAF7),
-
           borderRadius:
               BorderRadius.circular(16),
-
           border:
               Border.all(
             color:
@@ -3060,36 +2513,23 @@ class _LocationSearchSheetState
 
         child:
             Row(
-
           children: [
-
-            // ------------------------------------------------
             // LOCATION ICON
-            // ------------------------------------------------
-
             Container(
-
               width: 43,
-
               height: 43,
-
               decoration:
                   BoxDecoration(
-
                 color:
                     const Color(0xFFE6F2E1),
-
                 borderRadius:
                     BorderRadius.circular(13),
               ),
 
               child:
                   const Icon(
-
                 Icons.location_on_outlined,
-
                 size: 22,
-
                 color:
                     Color(0xFF438C47),
               ),
@@ -3101,37 +2541,25 @@ class _LocationSearchSheetState
             ),
 
 
-            // ------------------------------------------------
             // LOCATION NAME
-            // ------------------------------------------------
-
             Expanded(
 
               child:
                   Column(
-
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
 
                 children: [
-
                   Text(
-
                     result.name,
-
                     maxLines: 1,
-
                     overflow:
                         TextOverflow.ellipsis,
-
                     style:
                         const TextStyle(
-
                       fontSize: 13,
-
                       fontWeight:
                           FontWeight.w800,
-
                       color:
                           Color(0xFF344238),
                     ),
@@ -3142,23 +2570,15 @@ class _LocationSearchSheetState
                     height: 3,
                   ),
 
-
                   Text(
-
                     result.secondaryName,
-
                     maxLines: 2,
-
                     overflow:
                         TextOverflow.ellipsis,
-
                     style:
                         const TextStyle(
-
                       fontSize: 9.5,
-
                       height: 1.3,
-
                       color:
                           Color(0xFF7A847C),
                     ),
@@ -3169,9 +2589,7 @@ class _LocationSearchSheetState
 
 
             const Icon(
-
               Icons.chevron_right_rounded,
-
               color:
                   Color(0xFF8A938B),
             ),
