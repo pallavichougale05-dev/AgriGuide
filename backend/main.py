@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 
 # Routers
 from routes.crop import router as crop_router

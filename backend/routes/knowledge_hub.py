@@ -65,6 +65,7 @@ def get_articles(db: Session = Depends(get_db)):
                 "category": article.category,
                 "summary": article.summary,
                 "content": article.content,
+                "image_url": article.image_url,
             }
             for article in articles
         ],
@@ -100,6 +101,7 @@ def get_article(
             "category": article.category,
             "summary": article.summary,
             "content": article.content,
+            "image_url": article.image_url,
         },
     }
 
@@ -131,6 +133,7 @@ def get_articles_by_category(
                 "category": article.category,
                 "summary": article.summary,
                 "content": article.content,
+                "image_url": article.image_url,
             }
             for article in articles
         ],
@@ -286,6 +289,7 @@ def get_experiences(
 # CREATE AN EXPERIENCE POST
 # POST /knowledge/experiences
 
+
 @router.post("/experiences", status_code=201)
 def share_experience(
     title: str = Form(..., min_length=1, max_length=200),
@@ -309,30 +313,6 @@ def share_experience(
     saved_photo_path = None
 
     if photo is not None and photo.filename:
-        allowed_types = {
-            "image/jpeg": ".jpg",
-            "image/png": ".png",
-            "image/webp": ".webp",
-        }
-
-        extension = allowed_types.get(photo.content_type)
-
-        if extension is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Only JPG, PNG, and WEBP images are supported.",
-            )
-
-        upload_dir = (
-            Path(__file__).resolve().parents[1]
-            / "uploads"
-            / "experiences"
-        )
-        upload_dir.mkdir(parents=True, exist_ok=True)
-
-        filename = f"{uuid4().hex}{extension}"
-        saved_photo_path = upload_dir / filename
-
         try:
             image_bytes = photo.file.read()
 
@@ -348,8 +328,40 @@ def share_experience(
                     detail="Photo size must not exceed 5 MB.",
                 )
 
+            # Detect the actual image format.
+            if image_bytes.startswith(b"\xff\xd8\xff"):
+                extension = ".jpg"
+
+            elif image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+                extension = ".png"
+
+            elif (
+                image_bytes.startswith(b"RIFF")
+                and image_bytes[8:12] == b"WEBP"
+            ):
+                extension = ".webp"
+
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid image. Please upload a valid JPG, PNG, or WEBP image.",
+                )
+
+            upload_dir = (
+                Path(__file__).resolve().parents[1]
+                / "uploads"
+                / "experiences"
+            )
+
+            upload_dir.mkdir(parents=True, exist_ok=True)
+
+            filename = f"{uuid4().hex}{extension}"
+            saved_photo_path = upload_dir / filename
+
             saved_photo_path.write_bytes(image_bytes)
+
             photo_url = f"/uploads/experiences/{filename}"
+
         finally:
             photo.file.close()
 
@@ -365,6 +377,7 @@ def share_experience(
         db.add(experience)
         db.commit()
         db.refresh(experience)
+
     except Exception:
         db.rollback()
 
@@ -377,16 +390,17 @@ def share_experience(
         )
 
     return {
-    "success": True,
-    "message": "Experience published successfully.",
-    "experience": {
-        "id": experience.id,
-        "user_id": experience.user_id,
-        "title": experience.title,
-        "topic": experience.topic,
-        "content": experience.content,
-        "author_name": current_user.full_name,
-        "photo_url": experience.photo_url,
-        "created_at": experience.created_at.isoformat(),
-    },
-}
+        "success": True,
+        "message": "Experience published successfully.",
+        "experience": {
+            "id": experience.id,
+            "user_id": experience.user_id,
+            "title": experience.title,
+            "topic": experience.topic,
+            "content": experience.content,
+            "author_name": current_user.full_name,
+            "photo_url": experience.photo_url,
+            "created_at": experience.created_at.isoformat(),
+        },
+    }
+

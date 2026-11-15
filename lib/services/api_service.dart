@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 // AGRIGUIDE API SERVICE
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = 'http://127.0.0.1:8000';
 
   static const FlutterSecureStorage _secureStorage =
       FlutterSecureStorage();
@@ -20,7 +20,6 @@ class ApiService {
   static const String _userNameKey = 'agriguide_user_name';
   static const String _userEmailKey = 'agriguide_user_email';
 
-  // ==========================================================
   // AUTHENTICATION
 
   static Future<AuthResponseModel> register({
@@ -282,10 +281,7 @@ class ApiService {
     };
   }
 
-  // ==========================================================
   // TEST API
-  // ==========================================================
-
   Future<String> testApi() async {
     final http.Response response =
         await http.get(
@@ -305,9 +301,7 @@ class ApiService {
     );
   }
 
-  // ==========================================================
   // CROP RECOMMENDATION
-  // ==========================================================
 
   static Future<List<CropRecommendation>> recommendCrops({
   required double nitrogen,
@@ -429,9 +423,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
   }
 }
 
-  // ==========================================================
   // WEATHER
-  // ==========================================================
 
   static Future<WeatherData> getWeather({
     double latitude = 16.70,
@@ -463,9 +455,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
     );
   }
 
-  // ==========================================================
   // LOCATION SEARCH
-  // ==========================================================
 
   static Future<List<LocationSearchResult>>
       searchLocations(
@@ -506,9 +496,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
     );
   }
 
-  // ==========================================================
   // CHATBOT
-  // ==========================================================
 
   static Future<String> sendChatMessage(
     String message,
@@ -591,9 +579,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
     }
   }
 
-  // ==========================================================
   // KNOWLEDGE HUB
-  // ==========================================================
 
   static Future<List<KnowledgeArticle>>
       getKnowledgeArticles() async {
@@ -693,33 +679,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
     );
   }
 
-    // ==========================================================
   // CREATE DIARY ENTRY
-  // ==========================================================
-  //
-  // Creates a diary record for the currently logged-in user.
-  //
-  // IMPORTANT:
-  // user_id is NOT sent from Flutter.
-  //
-  // The JWT is sent in the Authorization header.
-  // FastAPI reads the JWT and determines the current user.
-  //
-  // Flow:
-  //
-  // Flutter
-  //    ↓
-  // JWT in Authorization header
-  //    ↓
-  // FastAPI /diary
-  //    ↓
-  // get_current_user()
-  //    ↓
-  // user_id = current_user.id
-  //    ↓
-  // PostgreSQL
-  //
-  // ==========================================================
 
   static Future<DiaryEntryModel> createDiaryEntry({
     required DateTime date,
@@ -727,9 +687,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
     required String activity,
     required String notes,
   }) async {
-    // --------------------------------------------------------
     // GET SAVED JWT
-    // --------------------------------------------------------
 
     final String? token =
         await getAccessToken();
@@ -741,16 +699,12 @@ static Future<DiseaseDetectionResponse> detectDisease(
       );
     }
 
-    // --------------------------------------------------------
     // DIARY API URL
-    // --------------------------------------------------------
 
     final Uri url =
         Uri.parse('$baseUrl/diary');
 
-    // --------------------------------------------------------
     // SEND AUTHENTICATED REQUEST
-    // --------------------------------------------------------
 
     final http.Response response =
         await http.post(
@@ -774,9 +728,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
       const Duration(seconds: 15),
     );
 
-    // --------------------------------------------------------
     // SUCCESS
-    // --------------------------------------------------------
 
     if (response.statusCode == 200 ||
         response.statusCode == 201) {
@@ -789,9 +741,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
       );
     }
 
-    // --------------------------------------------------------
     // AUTHENTICATION ERROR
-    // --------------------------------------------------------
 
     if (response.statusCode == 401) {
       throw Exception(
@@ -799,9 +749,7 @@ static Future<DiseaseDetectionResponse> detectDisease(
       );
     }
 
-    // --------------------------------------------------------
     // OTHER ERROR
-    // --------------------------------------------------------
 
     String errorMessage =
         'Farm Diary create failed. '
@@ -823,18 +771,9 @@ static Future<DiseaseDetectionResponse> detectDisease(
     throw Exception(errorMessage);
   }
 
-  // ==========================================================
 // DELETE DIARY ENTRY
-// ==========================================================
-//
-// Deletes one diary record belonging to the authenticated user.
-//
-// The entry ID comes from the PostgreSQL record.
-// The JWT identifies the current user.
-//
-// Backend:
 // DELETE /diary/{entry_id}
-// ==========================================================
+
 
 static Future<void> deleteDiaryEntry(
   int entryId,
@@ -893,9 +832,7 @@ static Future<void> deleteDiaryEntry(
   throw Exception(errorMessage);
 }
 
-  // ==========================================================
   // COMMON API ERROR
-  // ==========================================================
 
   static String _getApiErrorMessage(
     http.Response response, {
@@ -927,9 +864,7 @@ static Future<void> deleteDiaryEntry(
     return '$fallback HTTP ${response.statusCode}';
   }
 
-      // ==========================================================
   // FARMER EXPERIENCES
-  // ==========================================================
 
   static Future<List<ExperienceModel>> getExperiences({
   String lang = 'en',
@@ -1096,10 +1031,7 @@ static Future<void> deleteDiaryEntry(
   }
 }
 
-
-// ============================================================
 // AUTH USER MODEL
-// ============================================================
 
 class UserModel {
   final int id;
@@ -1127,10 +1059,7 @@ class UserModel {
 
 }
 
-
-// ============================================================
 // AUTH RESPONSE MODEL
-// ============================================================
 
 class AuthResponseModel {
   final bool success;
@@ -1167,10 +1096,7 @@ class AuthResponseModel {
   }
 }
 
-
-// ============================================================
 // KNOWLEDGE ARTICLE
-// ============================================================
 
 class KnowledgeArticle {
   final int id;
@@ -1204,10 +1130,7 @@ class KnowledgeArticle {
   }
 }
 
-
-// ============================================================
 // CROP RECOMMENDATION
-// ============================================================
 
 class CropRecommendation {
   final String crop;
@@ -1235,10 +1158,7 @@ class CropRecommendation {
 
 }
 
-
-// ============================================================
 // CURRENT WEATHER
-// ============================================================
 
 class CurrentWeather {
   final double temperature;
@@ -1379,11 +1299,7 @@ class CurrentWeather {
   }
 }
 
-
-// ============================================================
 // WEATHER FORECAST
-// ============================================================
-
 class WeatherForecast {
   final String date;
   final double maxTemperature;
@@ -1428,10 +1344,7 @@ class WeatherForecast {
   }
 }
 
-
-// ============================================================
 // WEATHER DATA
-// ============================================================
 
 class WeatherData {
   final double latitude;
@@ -1525,11 +1438,7 @@ class WeatherData {
   }
 }
 
-
-// ============================================================
 // LOCATION SEARCH RESULT
-// ============================================================
-
 class LocationSearchResult {
   final String name;
   final double latitude;
@@ -1607,10 +1516,7 @@ class LocationSearchResult {
   }
 }
 
-
-// ============================================================
 // DISEASE DETECTION RESPONSE
-// ============================================================
 
 class DiseaseDetectionResponse {
   final bool success;
@@ -1690,6 +1596,7 @@ class DiaryEntryModel {
   
 }
 
+
 class ExperienceModel {
   final int id;
   final int? userId;
@@ -1711,7 +1618,27 @@ class ExperienceModel {
     required this.createdAt,
   });
 
-  factory ExperienceModel.fromJson(Map<String, dynamic> json) {
+  // Convert relative image paths into complete API URLs.
+  static String? _resolvePhotoUrl(dynamic value) {
+    if (value is! String || value.trim().isEmpty) {
+      return null;
+    }
+
+    final String path = value.trim();
+    final Uri uri = Uri.parse(path);
+
+    if (uri.hasScheme) {
+      return uri.toString();
+    }
+
+    return Uri.parse('${ApiService.baseUrl}/')
+        .resolve(path)
+        .toString();
+  }
+
+  factory ExperienceModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return ExperienceModel(
       id: (json['id'] as num).toInt(),
       userId: (json['user_id'] as num?)?.toInt(),
@@ -1719,9 +1646,9 @@ class ExperienceModel {
       topic: json['topic'] as String? ?? '',
       content: json['content'] as String? ?? '',
       authorName: json['author_name'] as String? ?? 'Farmer',
-      photoUrl: json['photo_url'] as String?,
+      photoUrl: _resolvePhotoUrl(json['photo_url']),
       createdAt: DateTime.parse(
-      json['created_at'] as String,
+        json['created_at'] as String,
       ),
     );
   }
