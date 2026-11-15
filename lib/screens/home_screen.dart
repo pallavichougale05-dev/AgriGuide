@@ -27,9 +27,8 @@ class _C {
 }
 
 class HomeScreen extends StatefulWidget {
-  // ----------------------------------------------------------
+
   // LANGUAGE CHANGE CALLBACK (provided by main.dart)
-  // ----------------------------------------------------------
   final void Function(Locale locale) onLanguageChanged;
 
   const HomeScreen({
@@ -41,9 +40,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-// ============================================================
 // HOME SCREEN STATE
-// ============================================================
 
 class _HomeScreenState extends State<HomeScreen> {
   // 0 = Home, 1 = Tools, 2 = Learn, 3 = Diary
@@ -64,9 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // ==========================================================
   // HANDLE BOTTOM NAVIGATION
-  // ==========================================================
 
   void handleNavigation(int index) {
     setState(() {
@@ -88,9 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ==========================================================
   // BUILD
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -122,9 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // HEADER
-  // ==========================================================
 
   Widget buildHeader(AppLocalizations l10n) {
     return Row(
@@ -180,9 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // LANGUAGE BUTTON  (globe + current language code)
-  // ==========================================================
 
   Widget buildLanguageButton(AppLocalizations l10n) {
     final String code =
@@ -258,9 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // WELCOME SECTION
-  // ==========================================================
 
   Widget buildWelcomeSection(AppLocalizations l10n) {
     return Column(
@@ -288,9 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // SEASON GUIDE CARD (offline, English + Marathi)
-  // ==========================================================
 
   Widget buildSeasonGuideCard() {
     final String lang = Localizations.localeOf(context).languageCode;
@@ -505,9 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // QUICK ACTIONS  (2 x 2, equal height)
-  // ==========================================================
 
   Widget buildQuickActions(AppLocalizations l10n) {
     return Column(
@@ -590,10 +573,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // QUICK ACTION CARD
   // White card, coloured icon tile, wrapping title/subtitle.
-  // ==========================================================
 
   Widget buildActionCard({
     required String title,
@@ -683,9 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // FARMING TIP
-  // ==========================================================
 
   Widget buildFarmingTip(AppLocalizations l10n) {
     return Container(
@@ -745,9 +724,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // BOTTOM NAVIGATION
-  // ==========================================================
 
   Widget buildBottomNavigation(AppLocalizations l10n) {
     return Container(
@@ -796,10 +773,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==========================================================
   // NAVIGATION ITEM
   // Each tab gets equal width; label scales down to fit.
-  // ==========================================================
 
   Widget buildNavigationItem({
     required int index,

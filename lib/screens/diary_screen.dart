@@ -4,7 +4,6 @@ import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 import 'auth_screen.dart';
 
-// ============================================================
 // DIARY ENTRY MODEL
 
 class DiaryEntry {
@@ -33,9 +32,7 @@ class DiaryEntry {
   }
 }
 
-// ============================================================
 // FARM DIARY SCREEN
-// ============================================================
 
 class DiaryScreen extends StatefulWidget {
   const DiaryScreen({super.key});
@@ -44,9 +41,7 @@ class DiaryScreen extends StatefulWidget {
   State<DiaryScreen> createState() => _DiaryScreenState();
 }
 
-// ============================================================
 // DIARY SCREEN STATE
-// ============================================================
 
 class _DiaryScreenState extends State<DiaryScreen> {
   final ScrollController _scrollController = ScrollController();
@@ -73,27 +68,13 @@ class _DiaryScreenState extends State<DiaryScreen> {
   bool get _isMarathi =>
       Localizations.localeOf(context).languageCode == 'mr';
 
-  // ----------------------------------------------------------
   // LANGUAGE OF THE LIST CURRENTLY ON SCREEN
-  // ----------------------------------------------------------
-  //
-  // Remembers which language the shared experiences were last
-  // requested in, so the list can be reloaded when the user
-  // switches between English and Marathi.
-  // ----------------------------------------------------------
-
   String? _loadedLang;
 
-  // ----------------------------------------------------------
   // LOGIN STATE
-  // ----------------------------------------------------------
-
   bool isLoggedIn = false;
 
-  // ----------------------------------------------------------
   // LOADING STATE
-  // ----------------------------------------------------------
-
   bool isLoading = false;
 
   // DIARY ENTRIES
@@ -441,9 +422,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     }
   }
 
-  // ==========================================================
   // MY SHARED EXPERIENCES SECTION
-  // ==========================================================
 
   Widget buildMySharedExperiences() {
     return Column(
@@ -454,7 +433,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
             Expanded(
               child: Text(
                 _isMarathi
-                    ? 'माझे सामायिक अनुभव'
+                    ? 'माझे अनुभव'
                     : 'My Shared Experiences',
                 style: const TextStyle(
                   fontSize: 20,
@@ -601,9 +580,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // MAIN BUILD
-  // ==========================================================
 
   @override
   Widget build(BuildContext context) {
@@ -614,9 +591,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return buildDiaryScreen();
   }
 
-  // ==========================================================
   // LOGIN SCREEN
-  // ==========================================================
 
   Widget buildLoginScreen() {
     final l10n = AppLocalizations.of(context)!;
@@ -641,9 +616,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ------------------------------------------------
                 // LOCK ICON
-                // ------------------------------------------------
 
                 Container(
                   width: 100,
@@ -661,9 +634,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
                 const SizedBox(height: 22),
 
-                // ------------------------------------------------
                 // TITLE
-                // ------------------------------------------------
 
                 Text(
                   l10n.privateDiary,
@@ -677,9 +648,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
                 const SizedBox(height: 9),
 
-                // ------------------------------------------------
                 // DESCRIPTION
-                // ------------------------------------------------
 
                 Text(
                   l10n.loginToUseDiary,
@@ -693,9 +662,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
                 const SizedBox(height: 25),
 
-                // ------------------------------------------------
                 // PRIVACY INFORMATION CARD
-                // ------------------------------------------------
 
                 Container(
                   width: double.infinity,
@@ -733,9 +700,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
                 const SizedBox(height: 25),
 
-                // ------------------------------------------------
                 // LOGIN BUTTON
-                // ------------------------------------------------
 
                 SizedBox(
                   width: double.infinity,
@@ -783,9 +748,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // PRIVACY POINT
-  // ==========================================================
 
   Widget buildPrivacyPoint({
     required IconData icon,
@@ -823,9 +786,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // LOGGED-IN DIARY SCREEN
-  // ==========================================================
 
   Widget buildDiaryScreen() {
     final l10n = AppLocalizations.of(context)!;
@@ -833,9 +794,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8F2),
 
-      // --------------------------------------------------------
       // APP BAR
-      // --------------------------------------------------------
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF168A52),
@@ -871,9 +830,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         ],
       ),
 
-      // --------------------------------------------------------
       // CONTENT
-      // --------------------------------------------------------
 
       body: SafeArea(
         child: RefreshIndicator(
@@ -892,9 +849,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
               110,
             ),
             children: [
-              // ------------------------------------------------
               // HEADER
-              // ------------------------------------------------
 
               buildDiaryHeader(),
 
@@ -939,9 +894,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
               const SizedBox(height: 22),
 
-              // ------------------------------------------------
               // HISTORY TITLE
-              // ------------------------------------------------
 
               Row(
                 key: _activityHistoryKey,
@@ -984,24 +937,15 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
               const SizedBox(height: 13),
 
-              // ------------------------------------------------
               // LOADING
-              // ------------------------------------------------
-
               if (isLoading)
                 buildLoadingDiary()
 
-              // ------------------------------------------------
               // EMPTY
-              // ------------------------------------------------
-
               else if (entries.isEmpty)
                 buildEmptyDiary()
 
-              // ------------------------------------------------
               // REAL DATABASE ENTRIES
-              // ------------------------------------------------
-
               else
                 ...entries.map(
                   (entry) {
@@ -1027,9 +971,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         ),
       ),
 
-      // --------------------------------------------------------
       // ADD ACTIVITY BUTTON
-      // --------------------------------------------------------
 
       floatingActionButton:
           FloatingActionButton.extended(
@@ -1053,9 +995,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // DIARY HEADER
-  // ==========================================================
 
   Widget buildDiaryHeader() {
     final l10n = AppLocalizations.of(context)!;
@@ -1156,9 +1096,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // LOADING STATE
-  // ==========================================================
 
   Widget buildLoadingDiary() {
     return Container(
@@ -1204,9 +1142,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // DIARY ENTRY CARD
-  // ==========================================================
 
   Widget buildDiaryEntry(
     DiaryEntry entry,
@@ -1377,9 +1313,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // DELETE DIARY ENTRY
-  // ==========================================================
 
   Future<void> confirmDeleteEntry(DiaryEntry entry) async {
     final bool? confirmed = await showDialog<bool>(
@@ -1518,7 +1452,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
 
   String _deleteConfirmationTitle() {
     return Localizations.localeOf(context).languageCode == 'mr'
-        ? 'क्रियाकलाप हटवायचा?'
+        ? 'क्रिया हटवायचा?'
         : 'Delete activity?';
   }
 
@@ -1556,9 +1490,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     return 'Unable to delete the farm activity.';
   }
 
-  // ==========================================================
   // FORMAT DATE
-  // ==========================================================
 
   String formatDate(DateTime date) {
     final bool isMarathi =
@@ -1607,9 +1539,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
         '${date.year}';
   }
 
-  // ==========================================================
   // EMPTY DIARY
-  // ==========================================================
 
   Widget buildEmptyDiary() {
     final l10n =
@@ -1661,9 +1591,7 @@ class _DiaryScreenState extends State<DiaryScreen> {
     );
   }
 
-  // ==========================================================
   // ERROR MESSAGE
-  // ==========================================================
 
   String getFriendlyErrorMessage(
     Object error,
@@ -1705,7 +1633,6 @@ class AddDiaryEntrySheet
 }
 
 // ADD ENTRY STATE
-
 class _AddDiaryEntrySheetState
     extends State<AddDiaryEntrySheet> {
   // FORM CONTROLLERS

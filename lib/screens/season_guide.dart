@@ -1,56 +1,3 @@
-// ============================================================
-// SEASON GUIDE
-// Data and date-based logic for the AgriGuide Home card.
-//
-// Save as: lib/screens/season_guide.dart
-//
-// This file is OFFLINE. It does not call the backend, an API,
-// or a machine-learning model.
-//
-// DATA QUALITY:
-// - Season labels are broad Maharashtra/Indian crop-season
-//   display periods, not district-specific planting orders.
-// - Crop activities below are included only where a source
-//   gives a usable Maharashtra window or a Maharashtra
-//   agricultural-university advisory.
-// - A crop may have different dates by district, variety,
-//   irrigation, rainfall and sowing date.
-// - Empty month lists mean this file does not publish a
-//   verified statewide activity for that month. It does NOT
-//   mean that no farmer anywhere should sow or harvest.
-//
-// Primary references (checked 15 November 2026):
-// 1. ICAR, Kharif Agro-Advisories for Farmers 2025,
-//    Maharashtra section, especially pp. 138 onwards.
-// 2. Government of India, Ministry of Agriculture & Farmers
-//    Welfare, Agricultural Statistics at a Glance 2024-25,
-//    Appendix V: state/crop sowing and harvesting periods.
-// 3. MPKV Rahuri / AMFU Pune, Agro-Advisory Bulletin,
-//    23 October 2026 (Pune AMFU; district-specific advisory).
-// 4. MPKV Rahuri, crop-wise sugarcane variety information:
-//    preseasonal planting 15 Oct-15 Nov; Suru 15 Jan-15 Feb.
-// 5. MPKV AICRP on Safflower: dryland sowing window.
-// 6. MPKV Extension Publications: annual Krishidarshani and
-//    seasonal Shri Sugi publications.
-//
-// Source URLs:
-// ICAR Kharif 2025:
-// https://www.icar.gov.in/sites/default/files/Circulars/ICAR%20En-Kharif%20Agro-Advisories%20for%20Farmers%202025.pdf
-// Government of India Agricultural Statistics 2024-25:
-// https://nccd.gov.in/uploads/Agricultural_Statisitcs_at_a_Glance_2024_25_11da3cd37d.pdf
-// MPKV / AMFU Pune advisory (23 Oct 2026):
-// https://www.mpkv.ac.in/Uploads/Weather/20261023_184910_7fe4ac0826aec0718ede7a617af5f033.pdf
-// MPKV sugarcane crop-wise information:
-// https://mpkv.ac.in/Uploads/Research/09%20-%20Sugarcane_20241015092036.pdf
-// MPKV AICRP safflower recommendations:
-// https://mpkv.ac.in/Uploads/Research/9.%20AICRP%20on%20Safflower_20250926040244.pdf
-//
-// IMPORTANT:
-// This is an offline educational overview, not a live advisory.
-// Always follow the latest district KVK / university / State
-// Agriculture Department advisory before taking field action.
-// ============================================================
-
 class SeasonSnapshot {
   final String seasonName;
   final String range;
@@ -104,21 +51,9 @@ class _Season {
 }
 
 class SeasonGuide {
-  // ----------------------------------------------------------
+
   // DISPLAY PERIODS
-  //
-  // Agricultural seasons overlap at transition months.
-  // For a simple one-season-at-a-time Home card, the UI uses
-  // these non-overlapping display buckets:
-  //   Kharif: June-October
-  //   Rabi:   November-March
-  //   Summer: April-May
-  //
-  // This is a UI grouping, NOT a claim that crop-season
-  // boundaries are identical in every district. Rabi sowing
-  // can begin in October; Zaid/summer crop activity can begin
-  // in March and extend into June.
-  // ----------------------------------------------------------
+
   static const List<_Season> _seasons = [
     _Season(
       startMonth: 6,
@@ -158,11 +93,8 @@ class SeasonGuide {
     ),
   ];
 
-  // ----------------------------------------------------------
   // CROP NAMES [English, Marathi]
-  // Names are kept separate from the month tables so the
-  // same crop can be displayed in either language.
-  // ----------------------------------------------------------
+  
   static const Map<String, List<String>> _crops = {
     'wheat': ['Wheat', 'गहू'],
     'gram': ['Gram (chickpea)', 'हरभरा'],
@@ -218,9 +150,7 @@ class SeasonGuide {
     12: ['cotton', 'tur', 'niger'],
   };
 
-  // ----------------------------------------------------------
   // MONTH NAMES [English, Marathi]
-  // ----------------------------------------------------------
   static const List<List<String>> _months = [
     ['January', 'जानेवारी'],
     ['February', 'फेब्रुवारी'],
@@ -236,15 +166,13 @@ class SeasonGuide {
     ['December', 'डिसेंबर'],
   ];
 
-  // ----------------------------------------------------------
   // SNAPSHOT FOR A DATE
-  // ----------------------------------------------------------
+
   static SeasonSnapshot snapshot(DateTime date, String languageCode) {
     final bool mr = languageCode.toLowerCase().startsWith('mr');
     final int month = date.month;
 
-    // These display buckets cover all 12 months without
-    // overlapping, while the text above explains that real
+    // These display buckets cover all 12 months without overlapping, while the text above explains that real
     // crop-season windows overlap around transition months.
     late final _Season season;
     late final int position;

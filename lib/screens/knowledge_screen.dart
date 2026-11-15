@@ -96,7 +96,6 @@ final List<ExperienceModel> result =
     }
   }
 
-  // ==========================================================
   // FILTERED EXPERIENCES (search only)
 
   List<ExperienceModel> get filteredExperiences {
@@ -117,13 +116,7 @@ final List<ExperienceModel> result =
         .toList();
   }
 
-  // ==========================================================
   // SHARE EXPERIENCE FLOW
-  //
-  // Farmer taps "Share Experience"
-  //      -> Is the farmer logged in?
-  //           Yes -> open the form
-  //           No  -> login sheet -> AuthScreen -> form
 
   Future<void> startShareFlow() async {
     final l10n = AppLocalizations.of(context)!;
@@ -204,7 +197,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // OPEN EXPERIENCE (any user can read it)
   void openExperience(ExperienceModel experience) {
     Navigator.push(
@@ -269,7 +261,6 @@ final List<ExperienceModel> result =
   }
 }
 
-  // ==========================================================
   // DISPOSE
   @override
   void dispose() {
@@ -277,7 +268,6 @@ final List<ExperienceModel> result =
     super.dispose();
   }
 
-  // ==========================================================
   // MAIN BUILD
   @override
   Widget build(BuildContext context) {
@@ -356,7 +346,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // FARMER COMMUNITY HEADER
 
   Widget buildCommunityHeader() {
@@ -423,7 +412,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // SEARCH FIELD
 
   Widget buildSearchField() {
@@ -479,7 +467,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // EXPERIENCE CONTENT
 
   Widget buildExperienceContent() {
@@ -524,7 +511,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // EXPERIENCE CARD
 
   Widget buildExperienceCard(ExperienceModel item) {
@@ -693,7 +679,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // ERROR STATE
 
   Widget buildErrorState(
@@ -757,7 +742,6 @@ final List<ExperienceModel> result =
     );
   }
 
-  // ==========================================================
   // NO EXPERIENCES STATE
 
   Widget buildNoExperiencesState() {
@@ -807,7 +791,6 @@ final List<ExperienceModel> result =
   }
 }
 
-// ============================================================
 // SMALL HELPER
 
 String formatDate(DateTime date) {
@@ -817,7 +800,6 @@ String formatDate(DateTime date) {
   return '${local.year}-$month-$day';
 }
 
-// ============================================================
 // EXPERIENCE DETAILS SCREEN
 // Any user (logged in or not) can read a shared experience.
 
@@ -989,15 +971,7 @@ class ExperienceDetailScreen extends StatelessWidget {
   }
 }
 
-// ============================================================
 // LOGIN REQUIRED BOTTOM SHEET
-//
-// Only asks the question. It returns:
-//   true  -> the farmer wants to log in / register
-//   false -> the farmer wants to continue without logging in
-//
-// The Knowledge Hub then opens AuthScreen and, after a
-// successful login, the Share Experience form.
 
 class LoginRequiredSheet extends StatelessWidget {
   final String message;

@@ -307,15 +307,8 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
     });
 
     try {
-      // SEND IMAGE TO FASTAPI
-      // The ApiService method uses multipart/form-data because
-      // we are uploading the actual image file.
-      //
-      // Current endpoint:
-      // POST /disease/detect
-      //
-      // The current backend only confirms that the image was
-      // received because the real ML model is not trained yet.
+     
+      // Current endpoint: POST /disease/detect
 
       final String lang =
     Localizations.localeOf(context).languageCode;
