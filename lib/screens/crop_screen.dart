@@ -10,8 +10,6 @@ class CropScreen extends StatefulWidget {
   State<CropScreen> createState() => _CropScreenState();
 }
 
-// ERROR TYPES
-
 enum CropErrorType {
   emptyFields,
   invalidNumbers,
@@ -19,91 +17,328 @@ enum CropErrorType {
   networkError,
 }
 
-// CROP SCREEN STATE
-
 class _CropScreenState extends State<CropScreen> {
-  // INPUT CONTROLLERS
-
+  // Soil input controllers
   final TextEditingController nitrogenController =
       TextEditingController();
-
   final TextEditingController phosphorusController =
       TextEditingController();
-
   final TextEditingController potassiumController =
       TextEditingController();
-
-  final TextEditingController temperatureController =
-      TextEditingController();
-
-  final TextEditingController humidityController =
-      TextEditingController();
-
   final TextEditingController phController =
       TextEditingController();
 
-  final TextEditingController rainfallController =
+  // Location search
+  final TextEditingController locationController =
       TextEditingController();
 
-  // API / UI STATE
+  LocationSearchResult? selectedLocation;
+  List<LocationSearchResult> locationResults = [];
+  bool isSearchingLocation = false;
 
+  // API / UI state
   List<CropRecommendation> recommendations = [];
   bool isLoading = false;
   CropErrorType? errorType;
 
-  // CLEAN UP
+  bool get isMarathi =>
+      Localizations.localeOf(context).languageCode == 'mr';
+
+  String get locationLabel =>
+      isMarathi ? 'शेताचे ठिकाण' : 'Farm Location';
+
+  String get locationHint =>
+      isMarathi ? 'गाव किंवा शहर शोधा' : 'Search village or city';
+
+  String get searchLabel =>
+      isMarathi ? 'शोधा' : 'Search';
+
+  String get selectLocationMessage =>
+      isMarathi
+          ? 'शिफारसी मिळवण्यापूर्वी शेताचे ठिकाण निवडा.'
+          : 'Select your farm location before requesting recommendations.';
+
+  String get locationSearchError =>
+      isMarathi
+          ? 'ठिकाण शोधता आले नाही. पुन्हा प्रयत्न करा.'
+          : 'Could not search locations. Please try again.';
 
   @override
   void dispose() {
     nitrogenController.dispose();
     phosphorusController.dispose();
     potassiumController.dispose();
-    temperatureController.dispose();
-    humidityController.dispose();
     phController.dispose();
-    rainfallController.dispose();
-
+    locationController.dispose();
     super.dispose();
   }
 
   // ERROR MESSAGE
 
-  String _getErrorMessage(
-    AppLocalizations l10n,
-  ) {
+  String _getErrorMessage(AppLocalizations l10n) {
     switch (errorType) {
       case CropErrorType.emptyFields:
         return l10n.fillFarmConditions;
-
       case CropErrorType.invalidNumbers:
         return l10n.invalidNumbers;
-
       case CropErrorType.noResults:
         return l10n.noCropRecommendations;
-
       case CropErrorType.networkError:
         return l10n.unableCropRecommendations;
-
       case null:
         return '';
     }
   }
 
+  // LOCATION SEARCH
+
+  Future<void> searchFarmLocations() async {
+    final query = locationController.text.trim();
+
+    if (query.length < 2) {
+      setState(() {
+        locationResults = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isSearchingLocation = true;
+      locationResults = [];
+    });
+
+    try {
+      final results = await ApiService.searchCropLocations(query);
+      if (!mounted) return;
+
+      setState(() {
+        locationResults = results;
+        isSearchingLocation = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        locationResults = [];
+        isSearchingLocation = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(locationSearchError)),
+      );
+    }
+  }
+
+  void selectFarmLocation(LocationSearchResult location) {
+    setState(() {
+      selectedLocation = location;
+      locationController.text = location.displayName;
+      locationResults = [];
+      errorType = null;
+    });
+  }
+
+  // LOCATION FIELD
+
+  Widget buildLocationSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          locationLabel,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF526354),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: locationController,
+                textInputAction: TextInputAction.search,
+                onChanged: (_) {
+                  setState(() {
+                    selectedLocation = null;
+                    locationResults = [];
+                  });
+                },
+                onSubmitted: (_) => searchFarmLocations(),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: locationHint,
+                  prefixIcon: const Icon(
+                    Icons.location_on_outlined,
+                    color: Color(0xFF4B8650),
+                  ),
+                  suffixIcon: selectedLocation != null
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Color(0xFF438C47),
+                        )
+                      : null,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE0E5DC),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF4B8D4D),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isSearchingLocation
+                    ? null
+                    : searchFarmLocations,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3D8B47),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
+                child: isSearchingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(searchLabel),
+              ),
+            ),
+          ],
+        ),
+
+        if (locationResults.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0xFFE0E5DC),
+              ),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: locationResults.length,
+              // ignore: unnecessary_underscores
+              separatorBuilder: (_, __) => const Divider(
+                height: 1,
+                indent: 12,
+                endIndent: 12,
+              ),
+              itemBuilder: (context, index) {
+                final location = locationResults[index];
+
+                return ListTile(
+                  dense: true,
+                  leading: const Icon(
+                    Icons.location_on_outlined,
+                    color: Color(0xFF4B8650),
+                  ),
+                  title: Text(
+                    location.displayName,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  onTap: () => selectFarmLocation(location),
+                );
+              },
+            ),
+          ),
+        ],
+
+        if (selectedLocation != null) ...[
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                size: 15,
+                color: Color(0xFF438C47),
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  isMarathi
+                      ? 'शेताचे ठिकाण निवडले आहे'
+                      : 'Farm location selected',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF438C47),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  // VALIDATION
+
+  bool _validateFields() {
+    final fields = [
+      nitrogenController,
+      phosphorusController,
+      potassiumController,
+      phController,
+    ];
+
+    for (final field in fields) {
+      if (field.text.trim().isEmpty) {
+        setState(() {
+          errorType = CropErrorType.emptyFields;
+        });
+        return false;
+      }
+    }
+
+    if (selectedLocation == null) {
+      setState(() {
+        errorType = CropErrorType.emptyFields;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(selectLocationMessage)),
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
   // GET TOP 5 RECOMMENDATIONS
 
   Future<void> getRecommendations() async {
-    // Prevent duplicate requests.
-    if (isLoading) {
-      return;
-    }
+    if (isLoading) return;
 
-    // VALIDATE EMPTY FIELDS
-
-    if (!_validateFields()) {
-      return;
-    }
-
-    // PARSE VALUES
+    if (!_validateFields()) return;
 
     final double? nitrogen =
         double.tryParse(nitrogenController.text.trim());
@@ -114,37 +349,21 @@ class _CropScreenState extends State<CropScreen> {
     final double? potassium =
         double.tryParse(potassiumController.text.trim());
 
-    final double? temperature =
-        double.tryParse(temperatureController.text.trim());
-
-    final double? humidity =
-        double.tryParse(humidityController.text.trim());
-
     final double? ph =
         double.tryParse(phController.text.trim());
-
-    final double? rainfall =
-        double.tryParse(rainfallController.text.trim());
-
-    
-    // NUMERIC VALIDATION
 
     if (nitrogen == null ||
         phosphorus == null ||
         potassium == null ||
-        temperature == null ||
-        humidity == null ||
-        ph == null ||
-        rainfall == null) {
+        ph == null) {
       setState(() {
         recommendations = [];
         errorType = CropErrorType.invalidNumbers;
       });
-
       return;
     }
 
-    // START LOADING
+    final location = selectedLocation!;
 
     setState(() {
       recommendations = [];
@@ -153,92 +372,33 @@ class _CropScreenState extends State<CropScreen> {
     });
 
     try {
-      // CALL BACKEND
-      // ApiService handles the actual HTTP request.
+      final result = await ApiService.recommendCrops(
+        nitrogen: nitrogen,
+        phosphorus: phosphorus,
+        potassium: potassium,
+        ph: ph,
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
 
-      final String lang =
-    Localizations.localeOf(context).languageCode;
-
-    final result = await ApiService.recommendCrops(
-      nitrogen: nitrogen,
-      phosphorus: phosphorus,
-      potassium: potassium,
-      temperature: temperature,
-      humidity: humidity,
-      ph: ph,
-      rainfall: rainfall,
-      lang: lang,
-    );
-
-      if (!mounted) {
-        return;
-      }
-
-      // EMPTY RESULT
-
-      if (result.isEmpty) {
-        setState(() {
-          recommendations = [];
-          errorType = CropErrorType.noResults;
-          isLoading = false;
-        });
-
-        return;
-      }
-
-      // STORE RESULT
+      if (!mounted) return;
 
       setState(() {
         recommendations = result;
-        errorType = null;
+        errorType = result.isEmpty
+            ? CropErrorType.noResults
+            : null;
         isLoading = false;
       });
     } catch (_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
-      // Do not expose technical API exceptions to the farmer.
       setState(() {
         recommendations = [];
         errorType = CropErrorType.networkError;
         isLoading = false;
       });
     }
-  }
-
-  // SAFE POTASSIUM VALUE
-  // This helper keeps the call readable while still allowing
-  // normal decimal input.
-
-  String kPotassiumText() {
-    return potassiumController.text.trim();
-  }
-
-  // INPUT VALIDATION
-
-  bool _validateFields() {
-    final List<TextEditingController> fields = [
-      nitrogenController,
-      phosphorusController,
-      potassiumController,
-      temperatureController,
-      humidityController,
-      phController,
-      rainfallController,
-    ];
-
-    for (final field in fields) {
-      if (field.text.trim().isEmpty) {
-        setState(() {
-          errorType = CropErrorType.emptyFields;
-        });
-
-        return false;
-      }
-    }
-
-    return true;
   }
 
   // BUILD
@@ -250,13 +410,10 @@ class _CropScreenState extends State<CropScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8F2),
-
-     // APP BAR
       appBar: AppBar(
         backgroundColor: const Color(0xFFF7F8F2),
         foregroundColor: const Color(0xFF20352A),
         elevation: 0,
-
         title: Text(
           l10n.cropRecommendation,
           style: const TextStyle(
@@ -264,14 +421,11 @@ class _CropScreenState extends State<CropScreen> {
             fontWeight: FontWeight.w800,
           ),
         ),
-
         actions: [
           Container(
             width: 42,
             height: 42,
-            margin: const EdgeInsets.only(
-              right: 14,
-            ),
+            margin: const EdgeInsets.only(right: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFE5F1DD),
               borderRadius: BorderRadius.circular(14),
@@ -284,30 +438,15 @@ class _CropScreenState extends State<CropScreen> {
           ),
         ],
       ),
-
-      // CONTENT
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            16,
-            4,
-            16,
-            30,
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 30),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              // HERO CARD
-
               buildHeroCard(l10n),
-              const SizedBox(
-                height: 20,
-              ),
-
-              // FARM CONDITIONS HEADER
+              const SizedBox(height: 20),
 
               Text(
                 l10n.farmConditions,
@@ -317,10 +456,7 @@ class _CropScreenState extends State<CropScreen> {
                   color: Color(0xFF26372A),
                 ),
               ),
-
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
 
               Text(
                 l10n.farmConditionsSubtitle,
@@ -329,45 +465,27 @@ class _CropScreenState extends State<CropScreen> {
                   color: Color(0xFF788178),
                 ),
               ),
-
-              const SizedBox(
-                height: 14,
-              ),
-
-              // INPUTS
+              const SizedBox(height: 14),
 
               buildInputGrid(l10n),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 18),
 
-              // ERROR
+              buildLocationSelector(),
+              const SizedBox(height: 16),
 
-              if (errorType != null)
+              if (errorType != null) ...[
                 buildErrorCard(l10n),
-              if (errorType != null)
-                const SizedBox(
-                  height: 16,
-                ),
+                const SizedBox(height: 16),
+              ],
 
-              // RECOMMENDATIONS
-
-              if (recommendations.isNotEmpty)
+              if (recommendations.isNotEmpty) ...[
                 buildRecommendations(l10n),
-
-              if (recommendations.isNotEmpty)
-                const SizedBox(
-                  height: 18,
-                ),
-
-              // MAIN ACTION
+                const SizedBox(height: 18),
+              ],
 
               buildRecommendationButton(l10n),
-              const SizedBox(
-                height: 10,
-              ),
+              const SizedBox(height: 10),
 
-              // Small privacy / data note.
               Center(
                 child: Text(
                   l10n.weatherDataNote,
@@ -387,9 +505,7 @@ class _CropScreenState extends State<CropScreen> {
 
   // HERO CARD
 
-  Widget buildHeroCard(
-    AppLocalizations l10n,
-  ) {
+  Widget buildHeroCard(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -409,15 +525,11 @@ class _CropScreenState extends State<CropScreen> {
       ),
       child: Row(
         children: [
-          // ICON
-
           Container(
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(
-                alpha: 0.72,
-              ),
+              color: Colors.white.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(18),
             ),
             child: const Icon(
@@ -426,17 +538,10 @@ class _CropScreenState extends State<CropScreen> {
               size: 31,
             ),
           ),
-
-          const SizedBox(
-            width: 14,
-          ),
-
-          // TEXT
-
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.cropIntroTitle,
@@ -448,11 +553,7 @@ class _CropScreenState extends State<CropScreen> {
                     color: Color(0xFF29372D),
                   ),
                 ),
-
-                const SizedBox(
-                  height: 5,
-                ),
-
+                const SizedBox(height: 5),
                 Text(
                   l10n.cropIntroSubtitle,
                   style: const TextStyle(
@@ -469,27 +570,17 @@ class _CropScreenState extends State<CropScreen> {
     );
   }
 
-  // INPUT GRID
-  // Uses two columns on normal phone-sized screens.
-  // This significantly reduces scrolling compared with the
-  // original seven full-width fields.
+  // SOIL INPUT GRID
 
-  Widget buildInputGrid(
-    AppLocalizations l10n,
-  ) {
+  Widget buildInputGrid(AppLocalizations l10n) {
     return LayoutBuilder(
-      builder: (
-        BuildContext context,
-        BoxConstraints constraints,
-      ) {
-        final bool twoColumns =
-            constraints.maxWidth >= 340;
-
+      builder: (context, constraints) {
+        final bool twoColumns = constraints.maxWidth >= 340;
         final double fieldWidth = twoColumns
             ? (constraints.maxWidth - 12) / 2
             : constraints.maxWidth;
 
-        final List<Widget> fields = [
+        final fields = [
           buildInputField(
             controller: nitrogenController,
             label: l10n.nitrogen,
@@ -512,32 +603,11 @@ class _CropScreenState extends State<CropScreen> {
             icon: Icons.science_outlined,
           ),
           buildInputField(
-            controller: temperatureController,
-            label: l10n.temperature,
-            hint: 'e.g. 25.5',
-            suffix: '°C',
-            icon: Icons.thermostat_outlined,
-          ),
-          buildInputField(
-            controller: humidityController,
-            label: l10n.humidity,
-            hint: 'e.g. 80',
-            suffix: '%',
-            icon: Icons.water_drop_outlined,
-          ),
-          buildInputField(
             controller: phController,
             label: l10n.soilPh,
             hint: 'e.g. 6.5',
             suffix: 'pH',
             icon: Icons.grass_outlined,
-          ),
-          buildInputField(
-            controller: rainfallController,
-            label: l10n.rainfall,
-            hint: 'e.g. 200',
-            suffix: 'mm',
-            icon: Icons.water_rounded,
           ),
         ];
 
@@ -567,74 +637,53 @@ class _CropScreenState extends State<CropScreen> {
   }) {
     return TextField(
       controller: controller,
-      keyboardType:
-          const TextInputType.numberWithOptions(
+      keyboardType: const TextInputType.numberWithOptions(
         decimal: true,
       ),
       textInputAction: TextInputAction.next,
-
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
-
-        // Field icon.
         prefixIcon: Icon(
           icon,
           color: const Color(0xFF4B8650),
           size: 20,
         ),
-
-        // Field title.
         labelText: label,
-
-        // Example value.
         hintText: hint,
-
-        // Unit.
         suffixText: suffix,
-
         labelStyle: const TextStyle(
           fontSize: 12,
           color: Color(0xFF68736A),
         ),
-
         hintStyle: const TextStyle(
           fontSize: 11,
           color: Color(0xFFAFB6B0),
         ),
-
         suffixStyle: const TextStyle(
           fontSize: 11,
           color: Color(0xFF758075),
           fontWeight: FontWeight.w700,
         ),
-
-        contentPadding:
-            const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric(
           horizontal: 10,
           vertical: 12,
         ),
-
         enabledBorder: OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(17),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(
             color: Color(0xFFE0E5DC),
           ),
         ),
-
         focusedBorder: OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(17),
+          borderRadius: BorderRadius.circular(17),
           borderSide: const BorderSide(
             color: Color(0xFF4B8D4D),
             width: 1.6,
           ),
         ),
-
         border: OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(17),
+          borderRadius: BorderRadius.circular(17),
         ),
       ),
     );
@@ -642,9 +691,7 @@ class _CropScreenState extends State<CropScreen> {
 
   // ERROR CARD
 
-  Widget buildErrorCard(
-    AppLocalizations l10n,
-  ) {
+  Widget buildErrorCard(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -656,19 +703,14 @@ class _CropScreenState extends State<CropScreen> {
         ),
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.error_outline_rounded,
             color: Color(0xFFB84C4C),
             size: 21,
           ),
-
-          const SizedBox(
-            width: 10,
-          ),
-
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               _getErrorMessage(l10n),
@@ -679,11 +721,6 @@ class _CropScreenState extends State<CropScreen> {
               ),
             ),
           ),
-
-          const SizedBox(
-            width: 4,
-          ),
-
           GestureDetector(
             onTap: () {
               setState(() {
@@ -703,12 +740,9 @@ class _CropScreenState extends State<CropScreen> {
 
   // RECOMMENDATIONS SECTION
 
-  Widget buildRecommendations(
-    AppLocalizations l10n,
-  ) {
+  Widget buildRecommendations(AppLocalizations l10n) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
@@ -722,17 +756,14 @@ class _CropScreenState extends State<CropScreen> {
                 ),
               ),
             ),
-
             Container(
-              padding:
-                  const EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: 9,
                 vertical: 5,
               ),
               decoration: BoxDecoration(
                 color: const Color(0xFFE7F2E1),
-                borderRadius:
-                    BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 '${recommendations.length}',
@@ -745,11 +776,7 @@ class _CropScreenState extends State<CropScreen> {
             ),
           ],
         ),
-
-        const SizedBox(
-          height: 5,
-        ),
-
+        const SizedBox(height: 5),
         Text(
           l10n.recommendationVarietyInfo,
           style: const TextStyle(
@@ -757,26 +784,15 @@ class _CropScreenState extends State<CropScreen> {
             color: Color(0xFF788178),
           ),
         ),
-
-        const SizedBox(
-          height: 12,
-        ),
-
-        for (int index = 0;
-            index < recommendations.length;
-            index++) ...[
+        const SizedBox(height: 12),
+        for (int index = 0; index < recommendations.length; index++) ...[
           buildRecommendationCard(
-            recommendation:
-                recommendations[index],
+            recommendation: recommendations[index],
             rank: index + 1,
             l10n: l10n,
           ),
-
-          if (index !=
-              recommendations.length - 1)
-            const SizedBox(
-              height: 11,
-            ),
+          if (index != recommendations.length - 1)
+            const SizedBox(height: 11),
         ],
       ],
     );
@@ -791,20 +807,17 @@ class _CropScreenState extends State<CropScreen> {
   }) {
     final bool isTop = rank == 1;
 
-    // Keep the progress indicator between 0 and 1.
+    // Backend score is between 0 and 1.
     final double progress =
-        (recommendation.score / 100)
-            .clamp(0.0, 1.0);
+        recommendation.score.clamp(0.0, 1.0);
 
     return AnimatedContainer(
-      duration:
-          const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 250),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(21),
+        borderRadius: BorderRadius.circular(21),
         border: Border.all(
           color: isTop
               ? const Color(0xFFBBD8BB)
@@ -823,14 +836,9 @@ class _CropScreenState extends State<CropScreen> {
       ),
       child: Column(
         children: [
-
-          // TOP ROW
-
           Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Rank badge.
               Container(
                 width: 42,
                 height: 42,
@@ -845,70 +853,46 @@ class _CropScreenState extends State<CropScreen> {
                   '#$rank',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight:
-                        FontWeight.w800,
+                    fontWeight: FontWeight.w800,
                     color: isTop
                         ? const Color(0xFF3E8744)
                         : const Color(0xFF68736A),
                   ),
                 ),
               ),
-
-              const SizedBox(
-                width: 12,
-              ),
-
-              // Crop + variety.
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       recommendation.crop,
                       maxLines: 1,
-                      overflow:
-                          TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 17,
-                        fontWeight:
-                            FontWeight.w800,
-                        color:
-                            Color(0xFF29372D),
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF29372D),
                       ),
                     ),
-
-                    const SizedBox(
-                      height: 6,
-                    ),
-
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         const Icon(
                           Icons.eco_outlined,
                           size: 15,
-                          color:
-                              Color(0xFF4A8C4C),
+                          color: Color(0xFF4A8C4C),
                         ),
-
-                        const SizedBox(
-                          width: 5,
-                        ),
-
+                        const SizedBox(width: 5),
                         Expanded(
                           child: Text(
-                            '${l10n.variety}: '
-                            '${recommendation.variety}',
-                            maxLines: 1,
-                            overflow:
-                                TextOverflow.ellipsis,
-                            style:
-                                const TextStyle(
+                            '${l10n.variety}: ${recommendation.varieties.join(', ')}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                               fontSize: 11,
-                              fontWeight:
-                                  FontWeight.w600,
-                              color:
-                                  Color(0xFF667269),
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF667269),
                             ),
                           ),
                         ),
@@ -917,67 +901,42 @@ class _CropScreenState extends State<CropScreen> {
                   ],
                 ),
               ),
-
-              const SizedBox(
-                width: 12,
-              ),
-
-              // Match percentage.
+              const SizedBox(width: 12),
               Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${recommendation.score.toStringAsFixed(0)}%',
-                    style:
-                        const TextStyle(
+                    '${recommendation.percentage.toStringAsFixed(1)}%',
+                    style: const TextStyle(
                       fontSize: 17,
-                      fontWeight:
-                          FontWeight.w800,
-                      color:
-                          Color(0xFF3E8744),
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF3E8744),
                     ),
                   ),
-
                   Text(
                     l10n.match,
-                    style:
-                        const TextStyle(
+                    style: const TextStyle(
                       fontSize: 9,
-                      color:
-                          Color(0xFF8A938A),
+                      color: Color(0xFF8A938A),
                     ),
                   ),
                 ],
               ),
             ],
           ),
-
-          const SizedBox(
-            height: 15,
-          ),
-
-          // MATCH PROGRESS
-
+          const SizedBox(height: 15),
           ClipRRect(
-            borderRadius:
-                BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 7,
-              backgroundColor:
-                  const Color(0xFFEDF1EA),
-              valueColor:
-                  const AlwaysStoppedAnimation<
-                      Color>(
+              backgroundColor: const Color(0xFFEDF1EA),
+              valueColor: const AlwaysStoppedAnimation<Color>(
                 Color(0xFF69A76D),
               ),
             ),
           ),
-
-          const SizedBox(
-            height: 14,
-          ),
+          const SizedBox(height: 14),
         ],
       ),
     );
@@ -985,95 +944,60 @@ class _CropScreenState extends State<CropScreen> {
 
   // PRIMARY BUTTON
 
-  Widget buildRecommendationButton(
-    AppLocalizations l10n,
-  ) {
+  Widget buildRecommendationButton(AppLocalizations l10n) {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed:
-            isLoading
-                ? null
-                : getRecommendations,
-
+        onPressed: isLoading ? null : getRecommendations,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              const Color(0xFF3D8B47),
+          backgroundColor: const Color(0xFF3D8B47),
           foregroundColor: Colors.white,
-
-          disabledBackgroundColor:
-              const Color(0xFFA8BCA9),
-
+          disabledBackgroundColor: const Color(0xFFA8BCA9),
           elevation: 0,
-
-          shape:
-              RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
-
         child: AnimatedSwitcher(
-          duration:
-              const Duration(milliseconds: 180),
-
+          duration: const Duration(milliseconds: 180),
           child: isLoading
               ? Row(
-                  key: const ValueKey(
-                    'loading',
-                  ),
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  key: const ValueKey('loading'),
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(
                       width: 22,
                       height: 22,
-                      child:
-                          CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         color: Colors.white,
                         strokeWidth: 2.4,
                       ),
                     ),
-
-                    const SizedBox(
-                      width: 10,
-                    ),
-
+                    const SizedBox(width: 10),
                     Text(
                       l10n.loading,
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
-                        fontWeight:
-                            FontWeight.w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
                 )
               : Row(
-                  key: const ValueKey(
-                    'button',
-                  ),
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
+                  key: const ValueKey('button'),
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(
                       Icons.auto_awesome_rounded,
                       size: 19,
                     ),
-
-                    const SizedBox(
-                      width: 8,
-                    ),
-
+                    const SizedBox(width: 8),
                     Text(
                       l10n.getTop5Recommendations,
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 14.5,
-                        fontWeight:
-                            FontWeight.w800,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],

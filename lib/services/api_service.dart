@@ -304,49 +304,45 @@ class ApiService {
   // CROP RECOMMENDATION
 
   static Future<List<CropRecommendation>> recommendCrops({
-  required double nitrogen,
-  required double phosphorus,
-  required double potassium,
-  required double temperature,
-  required double humidity,
-  required double ph,
-  required double rainfall,
-  String lang = 'en',
+    required double nitrogen,
+    required double phosphorus,
+    required double potassium,
+    required double ph,
+    required double latitude,
+    required double longitude,
   }) async {
     final Uri url = Uri.parse(
-  '$baseUrl/crop/recommend?lang=$lang',
-);
+      '$baseUrl/crop/recommend',
+    );
 
-    final http.Response response =
-        await http.post(
+    final http.Response response = await http.post(
       url,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: jsonEncode({
         'nitrogen': nitrogen,
         'phosphorus': phosphorus,
         'potassium': potassium,
-        'temperature': temperature,
-        'humidity': humidity,
         'ph': ph,
-        'rainfall': rainfall,
+        'latitude': latitude,
+        'longitude': longitude,
       }),
+    ).timeout(
+      const Duration(seconds: 45),
     );
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data =
-          jsonDecode(response.body)
-              as Map<String, dynamic>;
+          jsonDecode(response.body) as Map<String, dynamic>;
 
       final List<dynamic> rawRecommendations =
-          data['recommendations']
-              as List<dynamic>;
+          data['recommendations'] as List<dynamic>;
 
       return rawRecommendations
           .map(
-            (item) =>
-                CropRecommendation.fromJson(
+            (item) => CropRecommendation.fromJson(
               item as Map<String, dynamic>,
             ),
           )
@@ -358,6 +354,7 @@ class ApiService {
       'HTTP ${response.statusCode}: ${response.body}',
     );
   }
+
 
 // DISEASE DETECTION
 
@@ -495,6 +492,51 @@ static Future<DiseaseDetectionResponse> detectDisease(
       'HTTP ${response.statusCode}: ${response.body}',
     );
   }
+
+    // CROP LOCATION SEARCH
+  // Separate from Farm Weather location search.
+
+  static Future<List<LocationSearchResult>>
+      searchCropLocations(String query) async {
+    final Uri url = Uri.parse(
+      '$baseUrl/crop/location-search',
+    ).replace(
+      queryParameters: {
+        'query': query.trim(),
+      },
+    );
+
+    final http.Response response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+      },
+    ).timeout(
+      const Duration(seconds: 20),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data =
+          jsonDecode(response.body) as Map<String, dynamic>;
+
+      final List<dynamic> results =
+          data['results'] as List<dynamic>? ?? [];
+
+      return results
+          .map(
+            (item) => LocationSearchResult.fromJson(
+              item as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    }
+
+    throw Exception(
+      'Crop location search failed. '
+      'HTTP ${response.statusCode}: ${response.body}',
+    );
+  }
+
 
   // CHATBOT
 
@@ -1132,14 +1174,15 @@ class KnowledgeArticle {
 
 // CROP RECOMMENDATION
 
+
 class CropRecommendation {
   final String crop;
-  final String variety;
+  final List<String> varieties;
   final double score;
 
   const CropRecommendation({
     required this.crop,
-    required this.variety,
+    required this.varieties,
     required this.score,
   });
 
@@ -1147,16 +1190,17 @@ class CropRecommendation {
     Map<String, dynamic> json,
   ) {
     return CropRecommendation(
-      crop:
-          json['crop'] as String,
-      variety:
-          json['variety'] as String,
-      score:
-          (json['score'] as num).toDouble(),
+      crop: json['crop'] as String? ?? '',
+      varieties: (json['varieties'] as List<dynamic>? ?? [])
+          .map((item) => item.toString())
+          .toList(),
+      score: (json['score'] as num).toDouble(),
     );
   }
 
+  double get percentage => score * 100;
 }
+
 
 // CURRENT WEATHER
 

@@ -1,0 +1,9 @@
+{
+  "rows": 6000,
+  "crops": 40,
+  "top1_accuracy": 0.783,
+  "top3_accuracy": 0.948,
+  "top5_accuracy": 0.978,
+  "macro_f1": 0.781,
+  "note": "The training data is generated, so these numbers show how well the model learned the generated patterns, not how it would perform on real fields."
+}

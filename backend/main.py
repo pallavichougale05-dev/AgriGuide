@@ -1,9 +1,9 @@
+
 from fastapi import FastAPI
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
-# Routers
-from routes.crop import router as crop_router
+# Existing feature routers
 from routes.weather import router as weather_router
 from routes.knowledge_hub import router as knowledge_router
 from routes.chatbot import router as chatbot_router
@@ -11,12 +11,13 @@ from routes.disease import router as disease_router
 from routes.diary import router as diary_router
 from routes.auth import router as auth_router
 
+# New ML Crop Recommendation router
+from crop_recommendation.router import router as crop_router
+
 # Database models registered with SQLAlchemy
 from models.knowledge_hub import KnowledgeArticle
 from models.farmer_experience import FarmerExperience
 
-from pathlib import Path
-from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title="AgriGuide API",
@@ -24,6 +25,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Uploads directory
 UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
