@@ -780,6 +780,81 @@ class AppLocalizationsMr extends AppLocalizations {
   String get shareExperienceTimeoutError => 'विनंतीसाठी खूप वेळ लागला. कृपया पुन्हा प्रयत्न करा.';
 
   @override
+  String get cropStepLocationTitle => 'तुमचे शेत कुठे आहे?';
+
+  @override
+  String get cropStepLocationHelp => 'आम्ही या ठिकाणचे गेल्या १२ महिन्यांचे हवामान वापरतो, त्यामुळे तापमान किंवा पाऊस टाइप करावा लागत नाही.';
+
+  @override
+  String get cropStepSoilTitle => 'तुमची माती कशी आहे?';
+
+  @override
+  String get cropStepSoilHelp => 'मातीच्या तपासणी अहवालातील मूल्ये टाका.';
+
+  @override
+  String get cropLocationLabel => 'शेताचे ठिकाण';
+
+  @override
+  String get cropLocationHint => 'गाव किंवा शहर शोधा';
+
+  @override
+  String get cropSearch => 'शोधा';
+
+  @override
+  String get cropLocationSelected => 'शेताचे ठिकाण निवडले आहे';
+
+  @override
+  String get cropSelectLocation => 'शिफारसी मिळवण्यापूर्वी शेताचे ठिकाण निवडा.';
+
+  @override
+  String get cropLocationSearchError => 'ठिकाण शोधता आले नाही. पुन्हा प्रयत्न करा.';
+
+  @override
+  String get cropNoPlaceFound => 'ठिकाण सापडले नाही. दुसरे नाव वापरून पहा.';
+
+  @override
+  String get cropEnterValue => 'कृपया मूल्य टाका.';
+
+  @override
+  String cropValueRange(String min, String max) {
+    return '$min ते $max दरम्यानचे मूल्य टाका.';
+  }
+
+  @override
+  String cropUsualRange(String min, String max) {
+    return 'सामान्य मर्यादा: $min ते $max';
+  }
+
+  @override
+  String get cropFindingCrops => 'योग्य पिके शोधत आहोत... यास काही सेकंद लागू शकतात.';
+
+  @override
+  String get cropResultsSubtitle => 'तुमच्या मातीला आणि परिसराच्या हवामानाला योग्य पिके, सर्वात योग्य पहिले.';
+
+  @override
+  String get cropBestMatch => 'सर्वात योग्य';
+
+  @override
+  String get cropVarietiesGrown => 'लागवड केल्या जाणाऱ्या जाती';
+
+  @override
+  String get cropNoVarieties => 'जातींची माहिती उपलब्ध नाही.';
+
+  @override
+  String cropMoreVarieties(int count) {
+    return '+$count आणखी';
+  }
+
+  @override
+  String get cropPrototypeNote => 'या शिफारसी प्रोटोटाइप मॉडेलवर आधारित आहेत. निर्णय घेण्यापूर्वी कृपया तुमच्या स्थानिक कृषी कार्यालयाकडे खात्री करा.';
+
+  @override
+  String get cropClimateNote => 'वापरलेले हवामान तुमच्या शेताच्या ठिकाणचे गेल्या १२ महिन्यांचे हवामान आहे.';
+
+  @override
+  String get cropOutOfRangeNote => 'काही मातीची मूल्ये या साधनाला परिचित असलेल्या मर्यादेबाहेर आहेत, त्यामुळे या शिफारसी कमी विश्वासार्ह असू शकतात.';
+
+  @override
   String get openSettings => 'सेटिंग्ज उघडा';
 
   @override

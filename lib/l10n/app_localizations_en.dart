@@ -780,6 +780,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareExperienceTimeoutError => 'The request took too long. Please try again.';
 
   @override
+  String get cropStepLocationTitle => 'Where is your farm?';
+
+  @override
+  String get cropStepLocationHelp => 'We use the weather of the last 12 months at this place, so you do not need to type temperature or rainfall.';
+
+  @override
+  String get cropStepSoilTitle => 'What is your soil like?';
+
+  @override
+  String get cropStepSoilHelp => 'Enter the values from your soil test report.';
+
+  @override
+  String get cropLocationLabel => 'Farm Location';
+
+  @override
+  String get cropLocationHint => 'Search village or city';
+
+  @override
+  String get cropSearch => 'Search';
+
+  @override
+  String get cropLocationSelected => 'Farm location selected';
+
+  @override
+  String get cropSelectLocation => 'Select your farm location before requesting recommendations.';
+
+  @override
+  String get cropLocationSearchError => 'Could not search locations. Please try again.';
+
+  @override
+  String get cropNoPlaceFound => 'No place found. Try another name.';
+
+  @override
+  String get cropEnterValue => 'Please enter a value.';
+
+  @override
+  String cropValueRange(String min, String max) {
+    return 'Enter a value between $min and $max.';
+  }
+
+  @override
+  String cropUsualRange(String min, String max) {
+    return 'Usual range: $min to $max';
+  }
+
+  @override
+  String get cropFindingCrops => 'Finding suitable crops... this can take a few seconds.';
+
+  @override
+  String get cropResultsSubtitle => 'Crops that suit your soil and the climate of your area, best match first.';
+
+  @override
+  String get cropBestMatch => 'Best match';
+
+  @override
+  String get cropVarietiesGrown => 'Varieties grown';
+
+  @override
+  String get cropNoVarieties => 'Variety information is not available.';
+
+  @override
+  String cropMoreVarieties(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get cropPrototypeNote => 'These suggestions come from a prototype model. Please confirm with your local agriculture office before you decide.';
+
+  @override
+  String get cropClimateNote => 'The climate used is the last 12 months of weather at your farm location.';
+
+  @override
+  String get cropOutOfRangeNote => 'Some soil values are outside the range this tool knows well, so these suggestions may be less reliable.';
+
+  @override
   String get openSettings => 'Open Settings';
 
   @override

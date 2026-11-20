@@ -302,7 +302,59 @@
 "shareExperienceConnectionError": "AgriGuide सर्व्हरशी संपर्क साधता आला नाही. कृपया इंटरनेट कनेक्शन तपासा.",
 "shareExperienceTimeoutError": "विनंतीसाठी खूप वेळ लागला. कृपया पुन्हा प्रयत्न करा.",
 
+"cropStepLocationTitle": "तुमचे शेत कुठे आहे?",
+  "cropStepLocationHelp": "आम्ही या ठिकाणचे गेल्या १२ महिन्यांचे हवामान वापरतो, त्यामुळे तापमान किंवा पाऊस टाइप करावा लागत नाही.",
+  "cropStepSoilTitle": "तुमची माती कशी आहे?",
+  "cropStepSoilHelp": "मातीच्या तपासणी अहवालातील मूल्ये टाका.",
+  "cropLocationLabel": "शेताचे ठिकाण",
+  "cropLocationHint": "गाव किंवा शहर शोधा",
+  "cropSearch": "शोधा",
+  "cropLocationSelected": "शेताचे ठिकाण निवडले आहे",
+  "cropSelectLocation": "शिफारसी मिळवण्यापूर्वी शेताचे ठिकाण निवडा.",
+  "cropLocationSearchError": "ठिकाण शोधता आले नाही. पुन्हा प्रयत्न करा.",
+  "cropNoPlaceFound": "ठिकाण सापडले नाही. दुसरे नाव वापरून पहा.",
+  "cropEnterValue": "कृपया मूल्य टाका.",
+  "cropValueRange": "{min} ते {max} दरम्यानचे मूल्य टाका.",
+  "cropUsualRange": "सामान्य मर्यादा: {min} ते {max}",
+  "cropFindingCrops": "योग्य पिके शोधत आहोत... यास काही सेकंद लागू शकतात.",
+  "cropResultsSubtitle": "तुमच्या मातीला आणि परिसराच्या हवामानाला योग्य पिके, सर्वात योग्य पहिले.",
+  "cropBestMatch": "सर्वात योग्य",
+  "cropVarietiesGrown": "लागवड केल्या जाणाऱ्या जाती",
+  "cropNoVarieties": "जातींची माहिती उपलब्ध नाही.",
+  "cropMoreVarieties": "+{count} आणखी",
+  "cropPrototypeNote": "या शिफारसी प्रोटोटाइप मॉडेलवर आधारित आहेत. निर्णय घेण्यापूर्वी कृपया तुमच्या स्थानिक कृषी कार्यालयाकडे खात्री करा.",
+  "cropClimateNote": "वापरलेले हवामान तुमच्या शेताच्या ठिकाणचे गेल्या १२ महिन्यांचे हवामान आहे.",
+  "cropOutOfRangeNote": "काही मातीची मूल्ये या साधनाला परिचित असलेल्या मर्यादेबाहेर आहेत, त्यामुळे या शिफारसी कमी विश्वासार्ह असू शकतात.",
 
+    "@cropValueRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+
+  "@cropUsualRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+
+  "@cropMoreVarieties": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "openSettings": "सेटिंग्ज उघडा",
   "partlyCloudy": "अंशतः ढगाळ"
 }

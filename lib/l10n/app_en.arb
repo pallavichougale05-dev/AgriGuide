@@ -290,8 +290,58 @@
 "shareExperienceConnectionError": "Unable to connect to AgriGuide server. Please check your internet connection.",
 "shareExperienceTimeoutError": "The request took too long. Please try again.",
 
+"cropStepLocationTitle": "Where is your farm?",
+  "cropStepLocationHelp": "We use the weather of the last 12 months at this place, so you do not need to type temperature or rainfall.",
+  "cropStepSoilTitle": "What is your soil like?",
+  "cropStepSoilHelp": "Enter the values from your soil test report.",
+  "cropLocationLabel": "Farm Location",
+  "cropLocationHint": "Search village or city",
+  "cropSearch": "Search",
+  "cropLocationSelected": "Farm location selected",
+  "cropSelectLocation": "Select your farm location before requesting recommendations.",
+  "cropLocationSearchError": "Could not search locations. Please try again.",
+  "cropNoPlaceFound": "No place found. Try another name.",
+  "cropEnterValue": "Please enter a value.",
+  "cropValueRange": "Enter a value between {min} and {max}.",
+  "@cropValueRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "cropUsualRange": "Usual range: {min} to {max}",
+  "@cropUsualRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "cropFindingCrops": "Finding suitable crops... this can take a few seconds.",
+  "cropResultsSubtitle": "Crops that suit your soil and the climate of your area, best match first.",
+  "cropBestMatch": "Best match",
+  "cropVarietiesGrown": "Varieties grown",
+  "cropNoVarieties": "Variety information is not available.",
+  "cropMoreVarieties": "+{count} more",
+  "@cropMoreVarieties": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cropPrototypeNote": "These suggestions come from a prototype model. Please confirm with your local agriculture office before you decide.",
+  "cropClimateNote": "The climate used is the last 12 months of weather at your farm location.",
+  "cropOutOfRangeNote": "Some soil values are outside the range this tool knows well, so these suggestions may be less reliable.",
 
-
+  
   "openSettings": "Open Settings",
   "partlyCloudy": "Partly Cloudy"
 }

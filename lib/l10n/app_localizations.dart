@@ -1637,6 +1637,144 @@ abstract class AppLocalizations {
   /// **'The request took too long. Please try again.'**
   String get shareExperienceTimeoutError;
 
+  /// No description provided for @cropStepLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where is your farm?'**
+  String get cropStepLocationTitle;
+
+  /// No description provided for @cropStepLocationHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the weather of the last 12 months at this place, so you do not need to type temperature or rainfall.'**
+  String get cropStepLocationHelp;
+
+  /// No description provided for @cropStepSoilTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your soil like?'**
+  String get cropStepSoilTitle;
+
+  /// No description provided for @cropStepSoilHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the values from your soil test report.'**
+  String get cropStepSoilHelp;
+
+  /// No description provided for @cropLocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Farm Location'**
+  String get cropLocationLabel;
+
+  /// No description provided for @cropLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search village or city'**
+  String get cropLocationHint;
+
+  /// No description provided for @cropSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get cropSearch;
+
+  /// No description provided for @cropLocationSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Farm location selected'**
+  String get cropLocationSelected;
+
+  /// No description provided for @cropSelectLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your farm location before requesting recommendations.'**
+  String get cropSelectLocation;
+
+  /// No description provided for @cropLocationSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not search locations. Please try again.'**
+  String get cropLocationSearchError;
+
+  /// No description provided for @cropNoPlaceFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No place found. Try another name.'**
+  String get cropNoPlaceFound;
+
+  /// No description provided for @cropEnterValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a value.'**
+  String get cropEnterValue;
+
+  /// No description provided for @cropValueRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a value between {min} and {max}.'**
+  String cropValueRange(String min, String max);
+
+  /// No description provided for @cropUsualRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Usual range: {min} to {max}'**
+  String cropUsualRange(String min, String max);
+
+  /// No description provided for @cropFindingCrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding suitable crops... this can take a few seconds.'**
+  String get cropFindingCrops;
+
+  /// No description provided for @cropResultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crops that suit your soil and the climate of your area, best match first.'**
+  String get cropResultsSubtitle;
+
+  /// No description provided for @cropBestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Best match'**
+  String get cropBestMatch;
+
+  /// No description provided for @cropVarietiesGrown.
+  ///
+  /// In en, this message translates to:
+  /// **'Varieties grown'**
+  String get cropVarietiesGrown;
+
+  /// No description provided for @cropNoVarieties.
+  ///
+  /// In en, this message translates to:
+  /// **'Variety information is not available.'**
+  String get cropNoVarieties;
+
+  /// No description provided for @cropMoreVarieties.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String cropMoreVarieties(int count);
+
+  /// No description provided for @cropPrototypeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These suggestions come from a prototype model. Please confirm with your local agriculture office before you decide.'**
+  String get cropPrototypeNote;
+
+  /// No description provided for @cropClimateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The climate used is the last 12 months of weather at your farm location.'**
+  String get cropClimateNote;
+
+  /// No description provided for @cropOutOfRangeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Some soil values are outside the range this tool knows well, so these suggestions may be less reliable.'**
+  String get cropOutOfRangeNote;
+
   /// No description provided for @openSettings.
   ///
   /// In en, this message translates to:
