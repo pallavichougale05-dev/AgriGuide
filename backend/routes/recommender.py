@@ -9,7 +9,11 @@ import joblib
 import numpy as np
 import pandas as pd
 
-MODEL_DIR = Path(__file__).resolve().parent / "models"
+MODEL_DIR = (
+    Path(__file__).resolve().parent.parent
+    / "crop_recommendation"
+    / "models"
+)
 
 try:
     _bundle = joblib.load(MODEL_DIR / "crop_model.pkl")

@@ -1,107 +1,145 @@
-from fastapi import APIRouter, Query
-from pydantic import BaseModel
 
-# Import the existing translation service.
-# This assumes translation_service.py is in the backend root.
+import asyncio
+
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field, model_validator
+from starlette.concurrency import run_in_threadpool
+
+from crop_recommendation import climate
 from translation_service import translate_text
+from .recommender import recommend_top5
 
-
-router = APIRouter(
-    prefix="/crop",
-    tags=["Crop Recommendation"],
-)
+router = APIRouter(prefix="/crop", tags=["crop"])
 
 
 class CropRequest(BaseModel):
-    nitrogen: float
-    phosphorus: float
-    potassium: float
-    temperature: float
-    humidity: float
-    ph: float
-    rainfall: float
+    nitrogen: float = Field(..., ge=0, le=500)
+    phosphorus: float = Field(..., ge=0, le=500)
+    potassium: float = Field(..., ge=0, le=500)
+    ph: float = Field(..., ge=0, le=14)
 
+    # Farm location: the server retrieves yearly climate data.
+    latitude: float | None = Field(None, ge=-90, le=90)
+    longitude: float | None = Field(None, ge=-180, le=180)
 
-class CropRecommendation(BaseModel):
-    crop: str
-    variety: str
-    score: float
+    # Alternative: manually supplied yearly climate values.
+    temperature: float | None = Field(None, ge=-10, le=60)
+    humidity: float | None = Field(None, ge=0, le=100)
+    rainfall: float | None = Field(None, ge=0, le=6000)
 
-
-# Dynamically translate text returned by the model.
-def translate_crop_text(text: str, lang: str) -> str:
-    if not text or lang == "en":
-        return text
-
-    try:
-        return translate_text(
-            text,
-            target_language=lang,
+    @model_validator(mode="after")
+    def need_location_or_climate(self):
+        has_location = (
+            self.latitude is not None
+            and self.longitude is not None
         )
-    except Exception as error:
-        print(f"Crop translation error: {error}")
-        return text
+        has_climate = None not in (
+            self.temperature,
+            self.humidity,
+            self.rainfall,
+        )
+
+        if not (has_location or has_climate):
+            raise ValueError(
+                "Send latitude and longitude, or "
+                "temperature, humidity and rainfall."
+            )
+
+        return self
 
 
-# Temporary recommendations.
-# Replace this function with your trained-model logic later.
-def get_top_recommendations(data: CropRequest):
-    return [
-        {
-            "crop": "Soybean",
-            "variety": "Model Result",
-            "score": 92.0,
-        },
-        {
-            "crop": "Wheat",
-            "variety": "Model Result",
-            "score": 87.0,
-        },
-        {
-            "crop": "Maize",
-            "variety": "Model Result",
-            "score": 84.0,
-        },
-        {
-            "crop": "Cotton",
-            "variety": "Model Result",
-            "score": 80.0,
-        },
-        {
-            "crop": "Jowar",
-            "variety": "Model Result",
-            "score": 76.0,
-        },
-    ]
+async def translate_crop_recommendations(recommendations, lang):
+    """
+    Translate crop names only.
+    Preserve scores, varieties and all other model output.
+    """
+
+    if lang == "en":
+        return recommendations
+
+    async def translate_one(item):
+        original_name = item["crop"]
+
+        try:
+            translated_name = await run_in_threadpool(
+                translate_text,
+                original_name,
+                lang,
+            )
+        except Exception as error:
+            print(f"Crop name translation failed: {error}")
+            translated_name = original_name
+
+        return {
+            **item,
+            "crop": translated_name or original_name,
+        }
+
+    return await asyncio.gather(
+        *(translate_one(item) for item in recommendations)
+    )
 
 
 @router.post("/recommend")
-def recommend_crop(
-    data: CropRequest,
-    lang: str = Query(
-        default="en",
-        pattern="^(en|mr)$",
-    ),
+async def recommend(
+    payload: CropRequest,
+    lang: str = Query(default="en", pattern="^(en|mr)$"),
 ):
-    recommendations = get_top_recommendations(data)
-
-    translated_recommendations = []
-
-    for recommendation in recommendations:
-        translated_recommendations.append(
-            {
-                "crop": translate_crop_text(
-                    recommendation["crop"],
-                    lang,
+    # STEP 1: Retrieve yearly climate.
+    if payload.latitude is not None and payload.longitude is not None:
+        try:
+            c = await climate.get_annual_climate(
+                payload.latitude,
+                payload.longitude,
+            )
+        except climate.ClimateUnavailable:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Could not get the climate for this location "
+                    "right now. Please try again."
                 ),
-                "variety": translate_crop_text(
-                    recommendation["variety"],
-                    lang,
-                ),
-                "score": recommendation["score"],
-            }
+            )
+
+        source = "open-meteo yearly history"
+
+    else:
+        c = {
+            "temperature": payload.temperature,
+            "humidity": payload.humidity,
+            "rainfall": payload.rainfall,
+        }
+        source = "sent by the app"
+
+    # STEP 2: Get recommendations from the existing trained model.
+    try:
+        recs = recommend_top5(
+            payload.nitrogen,
+            payload.phosphorus,
+            payload.potassium,
+            c["temperature"],
+            c["humidity"],
+            payload.ph,
+            c["rainfall"],
+        )
+    except Exception as error:
+        print(f"Crop recommendation error: {error}")
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Something went wrong while checking the "
+                "recommendation. Please try again."
+            ),
         )
 
+    # STEP 3: Translate crop names when Marathi is selected.
+    recs = await translate_crop_recommendations(recs, lang)
+
+    # STEP 4: Return the original recommendation structure.
     return {
-        "recommendations": translated_recommendations,
+        "recommendations": recs,
+        "climate_used": {
+            **c,
+            "source": source,
+        },
     }

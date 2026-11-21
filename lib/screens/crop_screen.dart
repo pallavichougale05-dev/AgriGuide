@@ -306,13 +306,19 @@ class _CropScreenState extends State<CropScreen> {
     });
 
     try {
-      final result = await ApiService.recommendCrops(
+      final String currentLanguage =
+    Localizations.localeOf(context).languageCode;
+
+final String lang = currentLanguage == 'mr' ? 'mr' : 'en';
+
+final result = await ApiService.recommendCrops(
         nitrogen: nitrogen,
         phosphorus: phosphorus,
         potassium: potassium,
         ph: ph,
         latitude: location.latitude,
         longitude: location.longitude,
+        lang: lang,
       );
 
       if (!mounted) return;

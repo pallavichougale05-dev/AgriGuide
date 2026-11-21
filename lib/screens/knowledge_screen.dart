@@ -1,12 +1,9 @@
+
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
-
 import 'auth_screen.dart';
 import 'share_experience_screen.dart';
-
-String? _lastLanguageCode;
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
@@ -15,396 +12,441 @@ class KnowledgeScreen extends StatefulWidget {
   State<KnowledgeScreen> createState() => _KnowledgeScreenState();
 }
 
-// KNOWLEDGE HUB STATE
 class _KnowledgeScreenState extends State<KnowledgeScreen> {
-  final TextEditingController searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
-  int? currentUserId;
-  List<ExperienceModel> experiences = [];
-  bool isLoadingExperiences = true;
-  String? experiencesError;
+  List<ExperienceModel> _experiences = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  String _searchQuery = '';
+  String _selectedTopic = 'All';
+
+  String _currentLanguageCode = '';
+  int _requestVersion = 0;
+
+  bool get _isMarathi =>
+      Localizations.localeOf(context).languageCode == 'mr';
+
+  String tr(String english, String marathi) =>
+      _isMarathi ? marathi : english;
 
   @override
   void initState() {
     super.initState();
-    loadExperiences();
-    loadCurrentUser();
   }
-
 
   @override
-void didChangeDependencies() {
-  super.didChangeDependencies();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-  final languageCode = Localizations.localeOf(context).languageCode;
+    final language = Localizations.localeOf(context).languageCode;
+    final normalizedLanguage = language == 'mr' ? 'mr' : 'en';
 
-  if (_lastLanguageCode != languageCode) {
-    _lastLanguageCode = languageCode;
-
-    // Reload experiences using the newly selected language.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        loadExperiences();
-      }
-    });
-  }
-}
-
-  Future<void> loadCurrentUser() async {
-    final user = await ApiService.getSavedUser();
-    if (!mounted) return;
-
-    setState(() {
-      currentUserId = user?.id;
-    });
+    if (_currentLanguageCode != normalizedLanguage) {
+      _currentLanguageCode = normalizedLanguage;
+      loadExperiences(normalizedLanguage);
+    }
   }
 
-  // LOAD EXPERIENCES FROM FASTAPI
-  // GET /knowledge/experiences (public - no login needed)
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
-  Future<void> loadExperiences() async {
-    setState(() {
-      isLoadingExperiences = true;
-      experiencesError = null;
-    });
+  Future<void> loadExperiences([String? language]) async {
+    final requestedLanguage =
+        language ?? (_isMarathi ? 'mr' : 'en');
+    final requestId = ++_requestVersion;
+
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
-      final String languageCode =
-    Localizations.localeOf(context).languageCode;
+      final result = await ApiService.getExperiences(
+        lang: requestedLanguage,
+      );
 
-final List<ExperienceModel> result =
-    await ApiService.getExperiences(lang: languageCode);
-
-      if (!mounted) {
-        return;
-      }
+      if (!mounted || requestId != _requestVersion) return;
 
       setState(() {
-        experiences = result;
-        isLoadingExperiences = false;
+        _experiences = result;
+        _isLoading = false;
       });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
+    } catch (e) {
+      if (!mounted || requestId != _requestVersion) return;
 
       setState(() {
-        isLoadingExperiences = false;
-        experiencesError =
-            error.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+        _errorMessage = tr(
+          'Unable to load community posts. Please try again.',
+          'समुदायातील पोस्ट लोड करता आल्या नाहीत. पुन्हा प्रयत्न करा.',
+        );
       });
     }
   }
 
-  // FILTERED EXPERIENCES (search only)
-
-  List<ExperienceModel> get filteredExperiences {
-    final String query = searchController.text.trim().toLowerCase();
-
-    if (query.isEmpty) {
-      return experiences;
-    }
-
-    return experiences
-        .where(
-          (item) =>
-              item.title.toLowerCase().contains(query) ||
-              item.topic.toLowerCase().contains(query) ||
-              item.content.toLowerCase().contains(query) ||
-              item.authorName.toLowerCase().contains(query),
-        )
+  List<String> get _topics {
+    final topics = _experiences
+        .map((item) => item.topic.trim())
+        .where((topic) => topic.isNotEmpty)
+        .toSet()
         .toList();
+
+    topics.sort();
+
+    return [
+      tr('All', 'सर्व'),
+      ...topics,
+    ];
   }
 
-  // SHARE EXPERIENCE FLOW
+  List<ExperienceModel> get _filteredExperiences {
+    final query = _searchQuery.toLowerCase().trim();
 
-  Future<void> startShareFlow() async {
-    final l10n = AppLocalizations.of(context)!;
+    return _experiences.where((item) {
+      final matchesTopic = _selectedTopic == 'All' ||
+          _selectedTopic == 'सर्व' ||
+          item.topic == _selectedTopic;
 
-    // Is the farmer logged in? hasValidSession() checks the saved
-    // JWT with the backend (GET /auth/me) and clears it if expired.
-    final bool loggedIn = await ApiService.hasValidSession();
+      final searchableText = [
+        item.title,
+        item.topic,
+        item.content,
+        item.authorName,
+      ].join(' ').toLowerCase();
 
-    if (!mounted) {
-      return;
+      final matchesSearch =
+          query.isEmpty || searchableText.contains(query);
+
+      return matchesTopic && matchesSearch;
+    }).toList();
+  }
+
+  Future<void> _openShareExperience() async {
+    try {
+      final isLoggedIn = await ApiService.hasValidSession();
+
+      if (!mounted) return;
+
+      if (!isLoggedIn) {
+        _showLoginRequiredSheet();
+        return;
+      }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ShareExperienceScreen(),
+        ),
+      );
+
+      if (!mounted) return;
+      await loadExperiences();
+    } catch (_) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              'Something went wrong. Please try again.',
+              'काहीतरी चूक झाली. पुन्हा प्रयत्न करा.',
+            ),
+          ),
+        ),
+      );
     }
+  }
 
-    if (loggedIn) {
-      await openShareForm();
-      return;
-    }
-
-    // Not logged in -> explain, then Login / Register.
-    final bool? wantsLogin = await showModalBottomSheet<bool>(
+  void _showLoginRequiredSheet() {
+    showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (sheetContext) {
-        return LoginRequiredSheet(message: l10n.loginToShareExperience);
-      },
-    );
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(28),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 58,
+                  width: 58,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: Color(0xFF247A43),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  tr('Login required', 'लॉगिन आवश्यक आहे'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF183B2A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  tr(
+                    'Please log in to share your farming experience with the community.',
+                    'समुदायासोबत तुमचा शेतीचा अनुभव शेअर करण्यासाठी कृपया लॉगिन करा.',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    height: 1.5,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF247A43),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: () async {
+  Navigator.pop(sheetContext);
 
-    if (wantsLogin != true || !mounted) {
-      return;
-    }
+  final loginResult = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const AuthScreen(),
+    ),
+  );
 
-    // AuthScreen pops with true after a successful login/registration.
-    final bool? authenticated = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AuthScreen(),
-      ),
-    );
+  debugPrint('LOGIN RESULT: $loginResult');
 
-    if (authenticated == true && mounted) {
-      // Successful login -> the Share Experience form opens.
-      await openShareForm();
-    }
-  }
+  if (!mounted) return;
 
-  Future<void> openShareForm() async {
-    final bool? shared = await Navigator.push<bool>(
+  if (loginResult == true) {
+    debugPrint('Opening Share Experience Form');
+
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => const ShareExperienceScreen(),
       ),
     );
 
-    if (shared != true || !mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    // Back in the Knowledge Hub: show the new experience.
-    setState(() {
-      searchController.clear();
-    });
-
-    await loadCurrentUser();
     await loadExperiences();
-
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: Color(0xFF168A52),
-        behavior: SnackBarBehavior.floating,
-        content: Text(
-          'Your experience has been shared. Other farmers can now read it.',
-        ),
-      ),
+  }
+},
+                    child: Text(
+                      tr('Login / Register', 'लॉगिन / नोंदणी'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: Text(
+                    tr('Maybe later', 'नंतर'),
+                    style: const TextStyle(
+                      color: Colors.black54,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // OPEN EXPERIENCE (any user can read it)
-  void openExperience(ExperienceModel experience) {
+  void _openExperience(ExperienceModel experience) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ExperienceDetailScreen(experience: experience),
-      ),
-    );
-  }
-
-  Future<void> deleteExperience(ExperienceModel experience) async {
-  final bool? confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Delete experience?'),
-      content: Text(
-        'Are you sure you want to delete "${experience.title}"? '
-        'This action cannot be undone.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
-          ),
-          child: const Text('Delete'),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed != true || !mounted) return;
-
-  try {
-    await ApiService.deleteExperience(experience.id);
-
-    if (!mounted) return;
-
-    setState(() {
-      experiences.removeWhere((item) => item.id == experience.id);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Experience deleted successfully.'),
-      ),
-    );
-  } catch (error) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          error.toString().replaceFirst('Exception: ', ''),
+        builder: (_) => ExperienceDetailScreen(
+          experience: experience,
         ),
       ),
     );
   }
-}
 
-  // DISPOSE
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
+  String _formatDate(dynamic value) {
+    final date = DateTime.tryParse(value.toString());
+
+    if (date == null) return '';
+
+    final localDate = date.toLocal();
+    final now = DateTime.now();
+    final difference = now.difference(localDate);
+
+    if (difference.inMinutes < 1) {
+      return tr('Just now', 'आत्ताच');
+    }
+
+    if (difference.inHours < 1) {
+      return tr(
+        '${difference.inMinutes} min ago',
+        '${difference.inMinutes} मिनिटांपूर्वी',
+      );
+    }
+
+    if (difference.inDays < 1) {
+      return tr(
+        '${difference.inHours} hours ago',
+        '${difference.inHours} तासांपूर्वी',
+      );
+    }
+
+    if (difference.inDays < 7) {
+      return tr(
+        '${difference.inDays} days ago',
+        '${difference.inDays} दिवसांपूर्वी',
+      );
+    }
+
+    return '${localDate.day.toString().padLeft(2, '0')}/'
+        '${localDate.month.toString().padLeft(2, '0')}/'
+        '${localDate.year}';
   }
 
-  // MAIN BUILD
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final filtered = _filteredExperiences;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8F2),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF168A52),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          l10n.knowledgeHub,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: l10n.search,
-            onPressed: () {
-              FocusScope.of(context).requestFocus(FocusNode());
-            },
-            icon: const Icon(Icons.search_rounded),
-          ),
-          IconButton(
-            tooltip: l10n.tryAgain,
-            onPressed: isLoadingExperiences ? null : loadExperiences,
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
-      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildCommunityHeader(),
-                    const SizedBox(height: 17),
-                    buildSearchField(),
-                    const SizedBox(height: 20),
-                    if (isLoadingExperiences)
-                      buildLoadingState('Loading shared experiences...')
-                    else if (experiencesError != null)
-                      buildErrorState(
-                        'Unable to load experiences',
-                        experiencesError,
-                        loadExperiences,
-                      )
-                    else
-                      buildExperienceContent(),
-                  ],
-                ),
+        child: RefreshIndicator(
+          color: const Color(0xFF247A43),
+          onRefresh: () => loadExperiences(),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: _buildHeader(),
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: startShareFlow,
-        backgroundColor: const Color(0xFF168A52),
-        foregroundColor: Colors.white,
-        elevation: 3,
-        icon: const Icon(Icons.edit_rounded),
-        label: Text(
-          l10n.shareExperience,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+              SliverToBoxAdapter(
+                child: _buildCommunityBanner(),
+              ),
+              SliverToBoxAdapter(
+                child: _buildSearchField(),
+              ),
+              SliverToBoxAdapter(
+                child: _buildTopicFilters(),
+              ),
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(filtered.length),
+              ),
+              if (_isLoading)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF247A43),
+                    ),
+                  ),
+                )
+              else if (_errorMessage != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildErrorState(),
+                )
+              else if (filtered.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _buildExperienceCard(
+                            filtered[index],
+                          ),
+                        );
+                      },
+                      childCount: filtered.length,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // FARMER COMMUNITY HEADER
-
-  Widget buildCommunityHeader() {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE8F3DF),
-            Color(0xFFF2F7ED),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(23),
-        border: Border.all(color: const Color(0xFFD8E7D1)),
-      ),
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 58,
-            height: 58,
+            height: 46,
+            width: 46,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(18),
+              color: const Color(0xFFE3F1E5),
+              borderRadius: BorderRadius.circular(15),
             ),
             child: const Icon(
-              Icons.menu_book_rounded,
-              size: 31,
-              color: Color(0xFF438C47),
+              Icons.groups_2_rounded,
+              color: Color(0xFF247A43),
+              size: 26,
             ),
           ),
-          const SizedBox(width: 13),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.community,
+                  tr('Farming Knowledge', 'शेतीविषयक माहिती'),
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF29372D),
+                    color: Color(0xFF183B2A),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  l10n.knowledgeSubtitle,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    height: 1.4,
-                    color: Color(0xFF68756A),
-                  ),
-                ),
+                
               ],
+            ),
+          ),
+          IconButton(
+            tooltip: tr('Refresh', 'रिफ्रेश'),
+            onPressed: () => loadExperiences(),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: Color(0xFF247A43),
+              size: 25,
             ),
           ),
         ],
@@ -412,396 +454,498 @@ final List<ExperienceModel> result =
     );
   }
 
-  // SEARCH FIELD
+  Widget _buildCommunityBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1F7540),
+            Color(0xFF3B9658),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -8,
+            bottom: -18,
+            child: Icon(
+              Icons.agriculture_rounded,
+              size: 112,
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  tr('FARMER COMMUNITY', 'शेतकरी समुदाय'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            
+              const SizedBox(height: 9),
+              SizedBox(
+                width: 250,
+                child: Text(
+                  tr(
+                    'Discover practical knowledge shared by fellow farmers.',
+                    'इतर शेतकऱ्यांनी शेअर केलेले उपयुक्त अनुभव जाणून घ्या.',
+                  ),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              InkWell(
+                onTap: _openShareExperience,
+                borderRadius: BorderRadius.circular(30),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.edit_rounded,
+                        size: 15,
+                        color: Color(0xFF247A43),
+                      ),
+                      const SizedBox(width: 7),
+                      Text(
+                        tr('Share your Experience', 'तुमचा अनुभव शेअर करा'),
+                        style: const TextStyle(
+                          color: Color(0xFF247A43),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget buildSearchField() {
-    final l10n = AppLocalizations.of(context)!;
-
-    return TextField(
-      controller: searchController,
-      onChanged: (_) {
-        setState(() {});
-      },
-      decoration: InputDecoration(
-        hintText: l10n.searchPosts,
-        hintStyle: const TextStyle(
-          fontSize: 11,
-          color: Color(0xFF929A93),
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFE6EBE5)),
         ),
-        prefixIcon: const Icon(
-          Icons.search_rounded,
-          size: 20,
-          color: Color(0xFF5B8065),
-        ),
-        suffixIcon: searchController.text.isNotEmpty
-            ? IconButton(
-                onPressed: () {
-                  searchController.clear();
-                  setState(() {});
-                },
-                icon: const Icon(Icons.close_rounded),
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(color: Color(0xFFE0E6DE)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(color: Color(0xFFE0E6DE)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(
-            color: Color(0xFF4A8A50),
-            width: 1.5,
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          onChanged: (value) {
+            setState(() => _searchQuery = value);
+          },
+          decoration: InputDecoration(
+            hintText: tr(
+              'Search experiences, topics...',
+              'अनुभव किंवा विषय शोधा...',
+            ),
+            hintStyle: const TextStyle(
+              color: Colors.black38,
+              fontSize: 13,
+            ),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: Color(0xFF247A43),
+            ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
         ),
       ),
     );
   }
 
-  // EXPERIENCE CONTENT
+  Widget _buildTopicFilters() {
+    final topics = _topics;
 
-  Widget buildExperienceContent() {
-    final List<ExperienceModel> visible = filteredExperiences;
+    if (topics.length <= 1) {
+      return const SizedBox(height: 8);
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Farmer Experiences',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF26372A),
-                ),
-              ),
+    if (!topics.contains(_selectedTopic)) {
+      _selectedTopic = topics.first;
+    }
+
+    return SizedBox(
+      height: 54,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+        scrollDirection: Axis.horizontal,
+        itemCount: topics.length,
+        // ignore: unnecessary_underscores
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final topic = topics[index];
+          final selected = topic == _selectedTopic;
+
+          return ChoiceChip(
+            label: Text(topic),
+            selected: selected,
+            onSelected: (_) {
+              setState(() => _selectedTopic = topic);
+            },
+            showCheckmark: false,
+            backgroundColor: Colors.white,
+            selectedColor: const Color(0xFF247A43),
+            labelStyle: TextStyle(
+              color: selected ? Colors.white : Colors.black54,
+              fontSize: 12,
+              fontWeight:
+                  selected ? FontWeight.w700 : FontWeight.w500,
             ),
-            Text(
-              '${visible.length}',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF7C867E),
-              ),
+            side: BorderSide(
+              color: selected
+                  ? const Color(0xFF247A43)
+                  : const Color(0xFFE2E8E1),
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (visible.isEmpty)
-          buildNoExperiencesState()
-        else
-          ...visible.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 11),
-              child: buildExperienceCard(item),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
             ),
-          ),
-      ],
+          );
+        },
+      ),
     );
   }
 
-  // EXPERIENCE CARD
-
-  Widget buildExperienceCard(ExperienceModel item) {
-    return GestureDetector(
-      onTap: () => openExperience(item),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE1E7DF)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.025),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+  Widget _buildSectionHeader(int count) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              tr('Community posts', 'समुदायातील पोस्ट'),
+              style: const TextStyle(
+                color: Color(0xFF183B2A),
+                fontWeight: FontWeight.w800,
+                fontSize: 17,
+              ),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 43,
-                  height: 43,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE7F2E2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.forum_rounded,
-                    size: 22,
-                    color: Color(0xFF438C47),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item.authorName.isEmpty ? 'Farmer' : item.authorName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF7D877F),
+          ),
+          Text(
+            '$count ${tr('posts', 'पोस्ट') }',
+            style: const TextStyle(
+              color: Colors.black45,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExperienceCard(ExperienceModel experience) {
+    final photoUrl = experience.photoUrl?.trim();
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => _openExperience(experience),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE9EDE8)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFE6F2E8),
+                    child: Text(
+                      experience.authorName.trim().isNotEmpty
+                          ? experience.authorName.trim()[0].toUpperCase()
+                          : 'F',
+                      style: const TextStyle(
+                        color: Color(0xFF247A43),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F3DF),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    item.topic,
-                    style: const TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF4B7F53),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          experience.authorName.trim().isNotEmpty
+                              ? experience.authorName
+                              : tr('Farmer', 'शेतकरी'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF26372C),
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _formatDate(experience.createdAt),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black45,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  if (experience.topic.trim().isNotEmpty)
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAF4EB),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          experience.topic,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF247A43),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                experience.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.3,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF203A2A),
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                experience.content,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.55,
+                  color: Colors.black54,
+                ),
+              ),
+              if (hasPhoto) ...[
+                const SizedBox(height: 13),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    photoUrl,
+                    width: double.infinity,
+                    height: 175,
+                    fit: BoxFit.cover,
+                    // ignore: unnecessary_underscores
+                    errorBuilder: (_, __, ___) {
+                      return Container(
+                        height: 100,
+                        color: const Color(0xFFF0F3EF),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.black38,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
+              const SizedBox(height: 13),
+              const Divider(height: 1, color: Color(0xFFEEF0EC)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.menu_book_rounded,
+                    size: 16,
+                    color: Color(0xFF247A43),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    tr('Read experience', 'अनुभव वाचा'),
+                    style: const TextStyle(
+                      color: Color(0xFF247A43),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 17,
+                    color: Color(0xFF247A43),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 76,
+              width: 76,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F2E8),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.forum_outlined,
+                size: 36,
+                color: Color(0xFF247A43),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? tr('No matching posts found', 'जुळणाऱ्या पोस्ट सापडल्या नाहीत')
+                  : tr('No experiences yet', 'अजून अनुभव उपलब्ध नाहीत'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF183B2A),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? tr(
+                      'Try another keyword or topic.',
+                      'दुसरा शब्द किंवा विषय शोधून पाहा.',
+                    )
+                  : tr(
+                      'Be the first to share a farming experience.',
+                      'शेतीचा अनुभव शेअर करणारे पहिले शेतकरी बना.',
+                    ),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black54,
+                height: 1.5,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 48,
+              color: Colors.black38,
             ),
             const SizedBox(height: 14),
             Text(
-              item.title,
+              _errorMessage ?? tr('Something went wrong', 'काहीतरी चूक झाली'),
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF27382D),
+                color: Colors.black54,
+                height: 1.5,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              item.content,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 11,
-                height: 1.4,
-                color: Color(0xFF6D786F),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => loadExperiences(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(tr('Try again', 'पुन्हा प्रयत्न करा')),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF247A43),
+                foregroundColor: Colors.white,
               ),
-            ),
-            const SizedBox(height: 13),
-            Row(
-              children: [
-                Icon(
-                  item.photoUrl != null
-                      ? Icons.photo_outlined
-                      : Icons.schedule_rounded,
-                  size: 18,
-                  color: const Color(0xFF68756C),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  formatDate(item.createdAt),
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF68756C),
-                  ),
-                ),
-                const Spacer(),
-                if (currentUserId != null &&
-                    item.userId == currentUserId)
-                  IconButton(
-                    tooltip: 'Delete experience',
-                    onPressed: () => deleteExperience(item),
-                    icon: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.red,
-                      size: 22,
-                    ),
-                  ),
-
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 18,
-                  color: Color(0xFF7C877F),
-                ),
-              ],
             ),
           ],
         ),
       ),
     );
   }
-
-  // LOADING STATE
-
-  Widget buildLoadingState(String message) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(35),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE1E7DF)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(strokeWidth: 3),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF68756C),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ERROR STATE
-
-  Widget buildErrorState(
-    String title,
-    String? message,
-    VoidCallback onRetry,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE1E7DF)),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.cloud_off_rounded,
-            size: 42,
-            color: Color(0xFF7B877E),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF344238),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            message ?? l10n.tryAgain,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10.5,
-              height: 1.4,
-              color: Color(0xFF7C867E),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text(l10n.tryAgain),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF168A52),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // NO EXPERIENCES STATE
-
-  Widget buildNoExperiencesState() {
-    final bool searching = searchController.text.trim().isNotEmpty;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE1E7DF)),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            searching ? Icons.search_off_rounded : Icons.forum_outlined,
-            size: 42,
-            color: const Color(0xFF7B877E),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            searching
-                ? 'No experiences found'
-                : 'No experiences shared yet',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF344238),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            searching
-                ? 'Try a different word.'
-                : 'Be the first farmer to share what you learned.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF7C867E),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-
-// SMALL HELPER
-
-String formatDate(DateTime date) {
-  final DateTime local = date.toLocal();
-  final String month = local.month.toString().padLeft(2, '0');
-  final String day = local.day.toString().padLeft(2, '0');
-  return '${local.year}-$month-$day';
-}
-
-// EXPERIENCE DETAILS SCREEN
-// Any user (logged in or not) can read a shared experience.
 
 class ExperienceDetailScreen extends StatelessWidget {
   final ExperienceModel experience;
@@ -811,270 +955,131 @@ class ExperienceDetailScreen extends StatelessWidget {
     required this.experience,
   });
 
+  bool _isMarathi(BuildContext context) =>
+      Localizations.localeOf(context).languageCode == 'mr';
+
+  String _tr(BuildContext context, String english, String marathi) =>
+      _isMarathi(context) ? marathi : english;
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final String? photoUrl = experience.photoUrl;
+    final photoUrl = experience.photoUrl?.trim();
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8F2),
+      backgroundColor: const Color(0xFFF5F7F3),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF168A52),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7F3),
+        foregroundColor: const Color(0xFF183B2A),
         elevation: 0,
         title: Text(
-          l10n.knowledgeHub,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          _tr(context, 'Farmer Experience', 'शेतकऱ्याचा अनुभव'),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Crop / topic.
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F3DF),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Text(
-                experience.topic,
-                style: const TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF4B7F53),
-                ),
-              ),
-            ),
-            const SizedBox(height: 11),
-
-            // Title.
-            Text(
-              experience.title,
-              style: const TextStyle(
-                fontSize: 23,
-                height: 1.2,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF25362A),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Author and date.
-            Row(
-              children: [
-                const Icon(
-                  Icons.person_outline_rounded,
-                  size: 16,
-                  color: Color(0xFF68756C),
-                ),
-                const SizedBox(width: 5),
-                Flexible(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE9EDE8)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (experience.topic.trim().isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF4EB),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Text(
-                    experience.authorName.isEmpty
-                        ? 'Farmer'
-                        : experience.authorName,
-                    overflow: TextOverflow.ellipsis,
+                    experience.topic,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF68756C),
+                      color: Color(0xFF247A43),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.schedule_rounded,
-                  size: 16,
-                  color: Color(0xFF68756C),
+              const SizedBox(height: 14),
+              Text(
+                experience.title,
+                style: const TextStyle(
+                  color: Color(0xFF183B2A),
+                  fontSize: 22,
+                  height: 1.3,
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(width: 5),
-                Text(
-                  formatDate(experience.createdAt),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF68756C),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.person_outline_rounded,
+                    size: 18,
+                    color: Color(0xFF247A43),
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      experience.authorName.trim().isNotEmpty
+                          ? experience.authorName
+                          : _tr(context, 'Farmer', 'शेतकरी'),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              if (hasPhoto) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    photoUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    // ignore: unnecessary_underscores
+                    errorBuilder: (_, __, ___) {
+                      return Container(
+                        height: 150,
+                        color: const Color(0xFFF0F3EF),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 35,
+                          color: Colors.black38,
+                        ),
+                      );
+                    },
                   ),
                 ),
+                const SizedBox(height: 20),
               ],
-            ),
-            const SizedBox(height: 16),
-
-            // Photo (optional).
-            if (photoUrl != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.network(
-                  photoUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) {
-                      return child;
-                    }
-
-                    return Container(
-                      height: 200,
-                      color: Colors.white,
-                      alignment: Alignment.center,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 3,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 120,
-                      color: Colors.white,
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.broken_image_outlined,
-                        size: 36,
-                        color: Color(0xFF7B877E),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            // Full experience.
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(17),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE1E7DF)),
-              ),
-              child: Text(
+              Text(
                 experience.content,
                 style: const TextStyle(
-                  fontSize: 12,
-                  height: 1.55,
-                  color: Color(0xFF59675E),
+                  fontSize: 15,
+                  height: 1.8,
+                  color: Color(0xFF35463A),
                 ),
               ),
-            ),
-            const SizedBox(height: 60),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
-}
-
-// LOGIN REQUIRED BOTTOM SHEET
-
-class LoginRequiredSheet extends StatelessWidget {
-  final String message;
-
-  const LoginRequiredSheet({
-    super.key,
-    required this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(26),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 38,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD9DED9),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F3DF),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.lock_outline_rounded,
-              size: 30,
-              color: Color(0xFF438C47),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            l10n.loginRequired,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF29372D),
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 11.5,
-              height: 1.4,
-              color: Color(0xFF737D75),
-            ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, true);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF168A52),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              child: Text(
-                l10n.login,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-            child: Text(
-              l10n.continueButton,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF617067),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

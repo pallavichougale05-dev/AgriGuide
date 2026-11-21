@@ -303,57 +303,64 @@ class ApiService {
 
   // CROP RECOMMENDATION
 
-  static Future<List<CropRecommendation>> recommendCrops({
-    required double nitrogen,
-    required double phosphorus,
-    required double potassium,
-    required double ph,
-    required double latitude,
-    required double longitude,
-  }) async {
-    final Uri url = Uri.parse(
-      '$baseUrl/crop/recommend',
-    );
+  
+static Future<List<CropRecommendation>> recommendCrops({
+  required double nitrogen,
+  required double phosphorus,
+  required double potassium,
+  required double ph,
+  required double latitude,
+  required double longitude,
+  String lang = 'en',
+}) async {
+  final Uri url = Uri.parse(
+    '$baseUrl/crop/recommend',
+  ).replace(
+    queryParameters: {
+      'lang': lang,
+    },
+  );
 
-    final http.Response response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'nitrogen': nitrogen,
-        'phosphorus': phosphorus,
-        'potassium': potassium,
-        'ph': ph,
-        'latitude': latitude,
-        'longitude': longitude,
-      }),
-    ).timeout(
-      const Duration(seconds: 45),
-    );
+  final http.Response response = await http.post(
+    url,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: jsonEncode({
+      'nitrogen': nitrogen,
+      'phosphorus': phosphorus,
+      'potassium': potassium,
+      'ph': ph,
+      'latitude': latitude,
+      'longitude': longitude,
+    }),
+  ).timeout(
+    const Duration(seconds: 45),
+  );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data =
-          jsonDecode(response.body) as Map<String, dynamic>;
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data =
+        jsonDecode(response.body) as Map<String, dynamic>;
 
-      final List<dynamic> rawRecommendations =
-          data['recommendations'] as List<dynamic>;
+    final List<dynamic> rawRecommendations =
+        data['recommendations'] as List<dynamic>;
 
-      return rawRecommendations
-          .map(
-            (item) => CropRecommendation.fromJson(
-              item as Map<String, dynamic>,
-            ),
-          )
-          .toList();
-    }
-
-    throw Exception(
-      'Crop API failed. '
-      'HTTP ${response.statusCode}: ${response.body}',
-    );
+    return rawRecommendations
+        .map(
+          (item) => CropRecommendation.fromJson(
+            item as Map<String, dynamic>,
+          ),
+        )
+        .toList();
   }
+
+  throw Exception(
+    'Crop API failed. '
+    'HTTP ${response.statusCode}: ${response.body}',
+  );
+}
+
 
 
 // DISEASE DETECTION
@@ -1641,6 +1648,7 @@ class DiaryEntryModel {
 }
 
 
+
 class ExperienceModel {
   final int id;
   final int? userId;
@@ -1662,7 +1670,6 @@ class ExperienceModel {
     required this.createdAt,
   });
 
-  // Convert relative image paths into complete API URLs.
   static String? _resolvePhotoUrl(dynamic value) {
     if (value is! String || value.trim().isEmpty) {
       return null;
@@ -1683,17 +1690,36 @@ class ExperienceModel {
   factory ExperienceModel.fromJson(
     Map<String, dynamic> json,
   ) {
+    final dynamic rawId = json['id'];
+    final dynamic rawUserId = json['user_id'];
+    final dynamic rawDate = json['created_at'];
+
+    final int? parsedId = rawId is num
+        ? rawId.toInt()
+        : int.tryParse(rawId?.toString() ?? '');
+
+    if (parsedId == null) {
+      throw const FormatException(
+        'Experience is missing a valid ID.',
+      );
+    }
+
+    final DateTime parsedDate =
+        DateTime.tryParse(rawDate?.toString() ?? '') ??
+        DateTime.now();
+
     return ExperienceModel(
-      id: (json['id'] as num).toInt(),
-      userId: (json['user_id'] as num?)?.toInt(),
-      title: json['title'] as String? ?? '',
-      topic: json['topic'] as String? ?? '',
-      content: json['content'] as String? ?? '',
-      authorName: json['author_name'] as String? ?? 'Farmer',
+      id: parsedId,
+      userId: rawUserId is num
+          ? rawUserId.toInt()
+          : int.tryParse(rawUserId?.toString() ?? ''),
+      title: json['title']?.toString() ?? '',
+      topic: json['topic']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+      authorName: json['author_name']?.toString() ?? 'Farmer',
       photoUrl: _resolvePhotoUrl(json['photo_url']),
-      createdAt: DateTime.parse(
-        json['created_at'] as String,
-      ),
+      createdAt: parsedDate,
     );
   }
 }
+

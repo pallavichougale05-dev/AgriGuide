@@ -1,5 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
+
 from translation_service import translate_text
 
 from fastapi import (
@@ -20,31 +21,72 @@ from routes.auth import get_current_user
 
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge Hub"])
-def localize_experience(item, lang: str):
-    title = item.title
-    topic = item.topic
-    content = item.content
 
-    if lang == "mr":
-        title = translate_text(title, "mr")
-        topic = translate_text(topic, "mr")
-        content = translate_text(content, "mr")
 
-    return {
+# ---------------------------------------------------------
+# SAFE EXPERIENCE TRANSLATION
+# ---------------------------------------------------------
+
+def translate_safely(text: str, lang: str) -> str:
+    """
+    Translate experience text into the selected app language.
+
+    translation_service.py automatically detects whether the
+    original text is English or Marathi and skips translation
+    when the text is already in the target language.
+
+    If translation fails, return the original text instead
+    of allowing the feed endpoint to crash.
+    """
+
+    if not text or not text.strip():
+        return text
+
+    try:
+        return translate_text(text, lang)
+
+    except Exception as error:
+        print(f"Experience translation failed: {error}")
+        return text
+
+
+def localize_experience(item, lang: str, include_user_id: bool = False):
+    """
+    Return a farmer experience in the requested language.
+
+    Original database content is never modified.
+    """
+
+    title = translate_safely(item.title, lang)
+    topic = translate_safely(item.topic, lang)
+    content = translate_safely(item.content, lang)
+
+    experience_data = {
         "id": item.id,
-        "user_id": item.user_id,
         "title": title,
         "topic": topic,
         "content": content,
-        "author_name": item.user.full_name if item.user else "Farmer",
+        "author_name": (
+            item.user.full_name if item.user else "Farmer"
+        ),
         "photo_url": item.photo_url,
         "created_at": (
             item.created_at.isoformat()
             if item.created_at else None
         ),
     }
+
+    # Preserve the existing response format for my-experiences.
+    if include_user_id:
+        experience_data["user_id"] = item.user_id
+
+    return experience_data
+
+
+# ---------------------------------------------------------
 # GET ALL KNOWLEDGE ARTICLES
 # GET /knowledge/articles
+# ---------------------------------------------------------
 
 @router.get("/articles")
 def get_articles(db: Session = Depends(get_db)):
@@ -72,8 +114,10 @@ def get_articles(db: Session = Depends(get_db)):
     }
 
 
+# ---------------------------------------------------------
 # GET SINGLE ARTICLE
 # GET /knowledge/articles/{article_id}
+# ---------------------------------------------------------
 
 @router.get("/articles/{article_id}")
 def get_article(
@@ -105,7 +149,10 @@ def get_article(
         },
     }
 
+
+# ---------------------------------------------------------
 # GET ARTICLES BY CATEGORY
+# ---------------------------------------------------------
 
 @router.get("/categories/{category}")
 def get_articles_by_category(
@@ -139,9 +186,12 @@ def get_articles_by_category(
         ],
     }
 
+
+# ---------------------------------------------------------
 # GET EXPERIENCES SHARED BY THE LOGGED-IN FARMER
 # GET /knowledge/my-experiences?lang=en or ?lang=mr
 # Requires JWT authentication.
+# ---------------------------------------------------------
 
 @router.get("/my-experiences")
 def get_my_experiences(
@@ -149,6 +199,7 @@ def get_my_experiences(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+
     if lang not in ["en", "mr"]:
         raise HTTPException(
             status_code=400,
@@ -157,38 +208,21 @@ def get_my_experiences(
 
     experiences = (
         db.query(FarmerExperience)
-        .filter(FarmerExperience.user_id == current_user.id)
+        .filter(
+            FarmerExperience.user_id == current_user.id
+        )
         .order_by(FarmerExperience.created_at.desc())
         .all()
     )
 
-    localized_experiences = []
-
-    for item in experiences:
-        title = item.title
-        topic = item.topic
-        content = item.content
-
-        if lang == "mr":
-            title = translate_text(title, "mr")
-            topic = translate_text(topic, "mr")
-            content = translate_text(content, "mr")
-
-        localized_experiences.append({
-            "id": item.id,
-            "user_id": item.user_id,
-            "title": title,
-            "topic": topic,
-            "content": content,
-            "author_name": (
-                item.user.full_name if item.user else "Farmer"
-            ),
-            "photo_url": item.photo_url,
-            "created_at": (
-                item.created_at.isoformat()
-                if item.created_at else None
-            ),
-        })
+    localized_experiences = [
+        localize_experience(
+            item,
+            lang,
+            include_user_id=True,
+        )
+        for item in experiences
+    ]
 
     return {
         "success": True,
@@ -197,9 +231,11 @@ def get_my_experiences(
     }
 
 
+# ---------------------------------------------------------
 # DELETE A FARMER EXPERIENCE POST
 # DELETE /knowledge/experiences/{experience_id}
 # Requires JWT authentication.
+# ---------------------------------------------------------
 
 @router.delete("/experiences/{experience_id}")
 def delete_experience(
@@ -207,9 +243,12 @@ def delete_experience(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+
     experience = (
         db.query(FarmerExperience)
-        .filter(FarmerExperience.id == experience_id)
+        .filter(
+            FarmerExperience.id == experience_id
+        )
         .first()
     )
 
@@ -235,14 +274,17 @@ def delete_experience(
     }
 
 
+# ---------------------------------------------------------
 # GET FARMER EXPERIENCE POSTS
-# GET /knowledge/experiences
+# GET /knowledge/experiences?lang=en or ?lang=mr
+# ---------------------------------------------------------
 
 @router.get("/experiences")
 def get_experiences(
     lang: str = "en",
     db: Session = Depends(get_db),
 ):
+
     if lang not in ["en", "mr"]:
         raise HTTPException(
             status_code=400,
@@ -255,30 +297,10 @@ def get_experiences(
         .all()
     )
 
-    localized_experiences = []
-
-    for item in experiences:
-        title = item.title
-        topic = item.topic
-        content = item.content
-
-        if lang == "mr":
-            title = translate_text(title, "mr")
-            topic = translate_text(topic, "mr")
-            content = translate_text(content, "mr")
-
-        localized_experiences.append({
-            "id": item.id,
-            "title": title,
-            "topic": topic,
-            "content": content,
-            "author_name": item.user.full_name if item.user else "Farmer",
-            "photo_url": item.photo_url,
-            "created_at": (
-                item.created_at.isoformat()
-                if item.created_at else None
-            ),
-        })
+    localized_experiences = [
+        localize_experience(item, lang)
+        for item in experiences
+    ]
 
     return {
         "success": True,
@@ -286,9 +308,11 @@ def get_experiences(
         "experiences": localized_experiences,
     }
 
+
+# ---------------------------------------------------------
 # CREATE AN EXPERIENCE POST
 # POST /knowledge/experiences
-
+# ---------------------------------------------------------
 
 @router.post("/experiences", status_code=201)
 def share_experience(
@@ -299,6 +323,7 @@ def share_experience(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+
     title = title.strip()
     topic = topic.strip()
     content = content.strip()
@@ -313,6 +338,7 @@ def share_experience(
     saved_photo_path = None
 
     if photo is not None and photo.filename:
+
         try:
             image_bytes = photo.file.read()
 
@@ -344,7 +370,10 @@ def share_experience(
             else:
                 raise HTTPException(
                     status_code=400,
-                    detail="Invalid image. Please upload a valid JPG, PNG, or WEBP image.",
+                    detail=(
+                        "Invalid image. Please upload a valid "
+                        "JPG, PNG, or WEBP image."
+                    ),
                 )
 
             upload_dir = (
@@ -353,7 +382,10 @@ def share_experience(
                 / "experiences"
             )
 
-            upload_dir.mkdir(parents=True, exist_ok=True)
+            upload_dir.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
 
             filename = f"{uuid4().hex}{extension}"
             saved_photo_path = upload_dir / filename
@@ -381,12 +413,18 @@ def share_experience(
     except Exception:
         db.rollback()
 
-        if saved_photo_path and saved_photo_path.exists():
+        if (
+            saved_photo_path
+            and saved_photo_path.exists()
+        ):
             saved_photo_path.unlink()
 
         raise HTTPException(
             status_code=500,
-            detail="Could not publish your experience. Please try again.",
+            detail=(
+                "Could not publish your experience. "
+                "Please try again."
+            ),
         )
 
     return {
@@ -400,7 +438,8 @@ def share_experience(
             "content": experience.content,
             "author_name": current_user.full_name,
             "photo_url": experience.photo_url,
-            "created_at": experience.created_at.isoformat(),
+            "created_at": (
+                experience.created_at.isoformat()
+            ),
         },
     }
-

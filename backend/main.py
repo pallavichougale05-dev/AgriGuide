@@ -18,6 +18,8 @@ from crop_recommendation.router import router as crop_router
 from models.knowledge_hub import KnowledgeArticle
 from models.farmer_experience import FarmerExperience
 
+from crop_recommendation.router import router as crop_router
+
 
 app = FastAPI(
     title="AgriGuide API",
