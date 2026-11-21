@@ -1,10 +1,9 @@
+
 name: agriguide
 description: "A new Flutter project."
 publish_to: 'none'
 
 version: 1.0.0+1
-
-
 
 environment:
   sdk: ^3.13.1
@@ -12,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   flutter_markdown: ^0.7.7+1
 
   # Flutter localization support.
@@ -35,10 +35,23 @@ dev_dependencies:
   # Recommended Dart and Flutter lint rules.
   flutter_lints: ^6.0.0
 
-flutter:
+  # Android launcher icon generator.
+  flutter_launcher_icons: ^0.14.4
 
+flutter:
   # Include Material Icons.
   uses-material-design: true
 
   # Enable automatic localization generation.
   generate: true
+
+  # AgriGuide in-app logo.
+  assets:
+    - assets/images/agriguide_logo.png
+
+# Android launcher icon configuration.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
