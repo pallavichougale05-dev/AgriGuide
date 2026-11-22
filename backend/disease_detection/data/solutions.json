@@ -1,0 +1,262 @@
+
+{
+  "Banana dataset/Banana disease/healthy": {
+    "healthy": true
+  },
+  "Banana dataset/Banana disease/pestalotiopsis": {
+    "healthy": false,
+    "symptoms": "Small dark brown spots that turn gray with distinct black borders",
+    "causes": "Fungus entry via open wounds, mechanical damage, wind, rain splash.",
+    "fertilizer": "Correct micro-nutrient deficiencies (Zinc, Boron) that weaken leaf texture and cause splits."
+  },
+  "Black Gram/Anthracnose": {
+    "healthy": false,
+    "symptoms": "Dark sunken spots on leaves or stems.",
+    "causes": "Colletotrichum fungus; humid weather.",
+    "fertilizer": "No pesticide required. Monitor crop regularly and maintain field sanitation."
+  },
+  "Black Gram/Healthy": {
+    "healthy": true
+  },
+  "Black Gram/Powdery Mildew": {
+    "healthy": false,
+    "symptoms": "White powdery coating on leaves.",
+    "causes": "Powdery mildew fungus; dry conditions with humidity.",
+    "fertilizer": "Maintain balanced NPK and good crop health. Avoid excessive nitrogen."
+  },
+  "Black Gram/Yellow Mosaic": {
+    "healthy": false,
+    "symptoms": "Yellow-green mosaic pattern on leaves.",
+    "causes": "Yellow mosaic virus; whitefly transmission.",
+    "fertilizer": "Maintain balanced nutrition; no fertilizer can cure the virus."
+  },
+  "Cotton_Original_Dataset/Alternaria Leaf Spot": {
+    "healthy": false,
+    "symptoms": "Brown circular spots on leaves.",
+    "causes": "Alternaria fungus; humidity, poor nutrition.",
+    "fertilizer": "Potassium (Potash), Balanced Fertilizer(NPK)."
+  },
+  "Cotton_Original_Dataset/Bacterial Blight": {
+    "healthy": false,
+    "symptoms": "Water-soaked spots, leaf blight and shedding.",
+    "causes": "Xanthomonas bacteria; rain, humidity.",
+    "fertilizer": "Potash,Avoid Excess Nitrogen"
+  },
+  "Cotton_Original_Dataset/Fusarium Wilt": {
+    "healthy": false,
+    "symptoms": "Yellowing, wilting and vascular browning.",
+    "causes": "Fusarium fungus; warm soil, infected soil.",
+    "fertilizer": "Apply balanced amounts of nitrogen and phosphorus"
+  },
+  "Cotton_Original_Dataset/Healthy Leaf": {
+    "healthy": true
+  },
+  "Cotton_Original_Dataset/Verticillium Wilt": {
+    "healthy": false,
+    "symptoms": "Yellowing, wilting and leaf drying.",
+    "causes": "Verticillium fungus; infected soil, cool conditions.",
+    "fertilizer": "Limit Nitrogen, Boost Potassium,Micronutrients: Zinc, manganese"
+  },
+  "Cucumber Leaf Disease/Downy mildew": {
+    "healthy": false,
+    "symptoms": "Leaves quickly turn papery brown, curl upward, and die.",
+    "causes": "High humidity; cool temperatures; heavy morning dew, overhead irrigation, and prolonged leaf wetness.",
+    "fertilizer": "Reduce Nitrogen to avoid lush, highly vulnerable vegetative canopies.Increase Potassium (K) to aid cell defense and speed up tissue recovery."
+  },
+  "Cucumber Leaf Disease/Healthy leaves": {
+    "healthy": true
+  },
+  "Cucumber Leaf Disease/Powdery mildew": {
+    "healthy": false,
+    "symptoms": "Infected leaves turn yellow, senesce prematurely.",
+    "causes": "Dry, warm days (15-25°C) with moderate to high humidity; stagnant air movement within crowded, shaded canopies.",
+    "fertilizer": "Strictly restrict Nitrogen as excess triggers tender, disease-prone tissues.Apply Calcium Nitrate to strengthen external leaf cuticles."
+  },
+  "Maize disease/Gray_Spot": {
+    "healthy": false,
+    "symptoms": "Gray rectangular lesions on leaves.",
+    "causes": "Cercospora fungus; warm, humid conditions.",
+    "fertilizer": "Balanced NPK; avoid excessive N"
+  },
+  "Maize disease/Healthy": {
+    "healthy": true
+  },
+  "Maize disease/Leaf_Blight": {
+    "healthy": false,
+    "symptoms": "Long brown or tan lesions on leaves.",
+    "causes": "Fungal infection; warm, humid weather.",
+    "fertilizer": "NPK 120:60:40 kg/ha"
+  },
+  "Rice/Disease/01_Bacterial_leaf_blight": {
+    "healthy": false,
+    "symptoms": "Water-soaked yellowing and drying of leaves.",
+    "causes": "Xanthomonas bacteria; high humidity, rain, excess nitrogen.",
+    "fertilizer": "Stop urea, Increase potassium."
+  },
+  "Rice/Disease/02_Brown_spot": {
+    "healthy": false,
+    "symptoms": "Brown circular spots on leaves.",
+    "causes": "Bipolaris oryzae fungus; poor nutrition, drought stress.",
+    "fertilizer": "Balanced NPK - 24:12:12"
+  },
+  "Rice/Disease/03_False_smut": {
+    "healthy": false,
+    "symptoms": "Green/yellow smut balls replace grains",
+    "causes": "Ustilaginoidea virens; humid weather, excess nitrogen",
+    "fertilizer": "Reduce Nitrogen, balanced Nutritions."
+  },
+  "Rice/Disease/04_leaf_sheath_blight": {
+    "healthy": false,
+    "symptoms": "Brown-gray lesions on leaf sheaths.",
+    "causes": "Rhizoctonia solani; high humidity, dense planting.",
+    "fertilizer": "Stop Nitrogen on Infection."
+  },
+  "Sugarcane Leaf Disease Dataset/Healthy": {
+    "healthy": true
+  },
+  "Sunflower Leaf Original/Alternaria Leaf Spot": {
+    "healthy": false,
+    "symptoms": "Dark brown spots on leaves.",
+    "causes": "Alternaria fungus; warm, humid weather.",
+    "fertilizer": "Balanced Nutrition: Apply balanced NPK fertilizers"
+  },
+  "Sunflower Leaf Original/Downy Mildew": {
+    "healthy": false,
+    "symptoms": "Yellow patches and white growth underneath leaves.",
+    "causes": "Plasmopara halstedii; wet soil, high humidity.",
+    "fertilizer": "Fertilizers do not cure sunflower downy mildew"
+  },
+  "Sunflower Leaf Original/Healthy": {
+    "healthy": true
+  },
+  "Sunflower Leaf Original/Powdery Mildew": {
+    "healthy": false,
+    "symptoms": "White powdery growth on leaves.",
+    "causes": "Powdery mildew fungus; humid conditions.",
+    "fertilizer": "Baking Soda Spray: 50 ml/10liter"
+  },
+  "Sunflower Leaf Original/Wilted Leaves": {
+    "healthy": false,
+    "symptoms": "Leaves droop, yellow and dry.",
+    "causes": "Water stress or wilt pathogens; poor drainage.",
+    "fertilizer": "Use a low-nitrogen, high-potassium/phosphorus fertilizer (such as a 5-10-10 NPK blend)"
+  },
+  "Tomato Disease/Early_blight": {
+    "healthy": false,
+    "symptoms": "Brown spots with concentric rings.",
+    "causes": "Alternaria fungus; warm, humid weather.",
+    "fertilizer": "Use balanced NPK fertilizers combined with micronutrients like Zinc"
+  },
+  "Tomato Disease/Healthy": {
+    "healthy": true
+  },
+  "Turmeric Plant Dataset/Turmeric Plant Disease/Rhizome Disease Root": {
+    "healthy": false,
+    "symptoms": "Small, individual rectangular/oval dark brown spotscovering both sides, making the leaf look reddish-brown.",
+    "causes": "Fungus Taphrina maculans. Promoted by warm, humid autumn weather (Oct–Nov) and dense, poorly weeded fields.",
+    "fertilizer": "Maintain standard split N:P:K. Apply well-decomposed manure mixed with Bio-fertilizers (Azospirillum) to build general plant vigor."
+  },
+  "Turmeric Plant Dataset/Turmeric Plant Disease/Rhizome Healthy Root": {
+    "healthy": true
+  },
+  "Wheat Disease/Wheat": {
+    "healthy": true
+  },
+  "Wheat Disease/black rust": {
+    "healthy": false,
+    "symptoms": "Large, dark reddish-brown to black oval pustules.",
+    "causes": "High humidity & warm weather (20°C to 30°C) Wind-blown spores",
+    "fertilizer": "Avoid excess Nitrogen (creates soft tissue) Apply Potassium (K) to boost stem strength"
+  },
+  "Wheat Disease/leaf blight": {
+    "healthy": false,
+    "symptoms": "Reddish-brown oval spots with yellow margins.",
+    "causes": "Warm (25°C), humid weather Seed/soil-borne spores",
+    "fertilizer": "Balanced NPK application increase Phosphorus (P) and Potassium (K) Avoid late heavy Nitrogen doses"
+  },
+  "Wheat Disease/powdery mildew": {
+    "healthy": false,
+    "symptoms": "White to grey fluffy, cottony patches on leaves/stems.",
+    "causes": "Cool (15-21°C), shady, highly humid microclimate Dense crop canopy",
+    "fertilizer": "Strictly limit excess Nitrogen Ensure adequate Potassium to strengthen cell walls"
+  },
+  "bajra/healthy leaves": {
+    "healthy": true
+  },
+  "groundnut leaf dataset/ALTERNARIA LEAF SPOT": {
+    "healthy": false,
+    "symptoms": "Brown spots with yellow halos.",
+    "causes": "Alternaria fungus; warm, humid weather.",
+    "fertilizer": "Boron and Zinc: Apply foliar micro-nutrient sprays."
+  },
+  "groundnut leaf dataset/HEALTHY": {
+    "healthy": true
+  },
+  "groundnut leaf dataset/LEAF SPOT (EARLY AND LATE)": {
+    "healthy": false,
+    "symptoms": "Dark spots causing leaf yellowing and drop.",
+    "causes": "Cercospora fungi; warm, humid conditions.",
+    "fertilizer": "Avoid excessive nitrogen and phosphorus.Recommed balanced NPK."
+  },
+  "groundnut leaf dataset/ROSETTE": {
+    "healthy": false,
+    "symptoms": "Stunted plants with small, distorted leaves.",
+    "causes": "Groundnut rosette virus; aphid transmission.",
+    "fertilizer": "Single Super Phosphate (SSP)(around 40 kg P₂O₅/ha)"
+  },
+  "groundnut leaf dataset/RUST": {
+    "healthy": false,
+    "symptoms": "Orange-brown pustules on leaf underside.",
+    "causes": "Puccinia arachidis; warm, humid weather.",
+    "fertilizer": "Calcium/Gypsum: Apply gypsum at 250 kg per hectare"
+  },
+  "onion/Stemphylium leaf blight and collectrichum leaf blight": {
+    "healthy": false,
+    "symptoms": "Brown/black leaf lesions and drying.",
+    "causes": "Fungi; high humidity, wet leaves.",
+    "fertilizer": "Balanced NPK; avoid excessive nitrogen and maintain good crop vigor."
+  },
+  "onion/healthy": {
+    "healthy": true
+  },
+  "onion/purple blotch": {
+    "healthy": false,
+    "symptoms": "Purple-brown lesions on leaves.",
+    "causes": "Alternaria porri; humid weather.",
+    "fertilizer": "Recommended N and P; maintain balanced nutrition and avoid plant stress."
+  },
+  "potato Detaset/Early_blight": {
+    "healthy": false,
+    "symptoms": "Small, dark brown-black spots with concentric rings on older lower leaves first.",
+    "causes": "Warm temp (24–29°C), high humidity, alternating wet/dry periods, nutrient-stressed/weak plants.",
+    "fertilizer": "Apply a 1.0% Urea foliar spray at 45 days after sowing to delay plant aging."
+  },
+  "potato Detaset/Late_blight": {
+    "healthy": false,
+    "symptoms": "Rapidly spreading irregular water-soaked/greasy lesions.",
+    "causes": "Cool to moderate temperatures (12–18°C), prolonged cloudiness, fog, rain, or >90% humidity.",
+    "fertilizer": "Avoid over-fertilizing with Nitrogen.Ensure sufficient Potassium (K) and Calcium (Ca) to strengthen cell walls against rapid tissue breakdown."
+  },
+  "potato Detaset/healthy": {
+    "healthy": true
+  },
+  "soyabean/Soyabean_Frog_Leaf_Eye": {
+    "healthy": false,
+    "symptoms": "Circular brown spots with dark borders.",
+    "causes": "Cercospora sojina; warm, humid conditions.",
+    "fertilizer": "Recommended NPK 00:52:34"
+  },
+  "soyabean/Soyabean_Spectoria_Brown_Spot": {
+    "healthy": false,
+    "symptoms": "Small brown spots on leaves.",
+    "causes": "Septoria glycines; wet, humid weather.",
+    "fertilizer": "N:P₂O₅:K₂O:S = 20:60–80:20:20 kg/ha"
+  },
+  "Sugarcane Leaf Disease Dataset/RedRot": {
+    "healthy": false,
+    "symptoms": "Yellowing and drying of leaves from the lower leaves upward. When an infected cane is split open, the internal tissue may show red discoloration with intermittent white patches.",
+    "causes": "Red rot is a fungal disease caused by Colletotrichum falcatum. It can spread through infected planting material and diseased crop residues.",
+    "fertilizer": "Fertilizer cannot cure red rot. Maintain balanced crop nutrition based on soil testing.",
+    "management": "Remove and destroy the entire infected clump. Do not use infected canes as seed material or ratoon an infected crop. Use disease-free planting material and locally recommended resistant varieties. Follow crop rotation in affected fields."
+  }
+}

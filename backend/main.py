@@ -7,19 +7,18 @@ from fastapi.staticfiles import StaticFiles
 from routes.weather import router as weather_router
 from routes.knowledge_hub import router as knowledge_router
 from routes.chatbot import router as chatbot_router
-from routes.disease import router as disease_router
 from routes.diary import router as diary_router
 from routes.auth import router as auth_router
 
-# New ML Crop Recommendation router
+# Crop recommendation router
 from crop_recommendation.router import router as crop_router
+
+# Disease detection ML router
+from disease_detection.router import router as ml_disease_router
 
 # Database models registered with SQLAlchemy
 from models.knowledge_hub import KnowledgeArticle
 from models.farmer_experience import FarmerExperience
-
-from crop_recommendation.router import router as crop_router
-
 
 app = FastAPI(
     title="AgriGuide API",
@@ -41,7 +40,10 @@ app.mount(
 app.include_router(crop_router)
 app.include_router(weather_router)
 app.include_router(chatbot_router)
-app.include_router(disease_router)
+
+# Register the new ML disease detection router only
+app.include_router(ml_disease_router)
+
 app.include_router(knowledge_router)
 app.include_router(diary_router)
 app.include_router(auth_router)

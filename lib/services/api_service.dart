@@ -369,20 +369,15 @@ static Future<DiseaseDetectionResponse> detectDisease(
   File imageFile, {
   String lang = 'en',
 }) async {
-  // Pass the selected language to FastAPI.
   final Uri url = Uri.parse(
     '$baseUrl/disease/detect',
   ).replace(
-    queryParameters: {
-      'lang': lang,
-    },
+    queryParameters: {'lang': lang},
   );
 
-  final http.MultipartRequest request =
-      http.MultipartRequest(
-    'POST',
-    url,
-  );
+  final request = http.MultipartRequest('POST', url);
+
+  request.headers['Accept'] = 'application/json';
 
   request.files.add(
     await http.MultipartFile.fromPath(
@@ -392,38 +387,35 @@ static Future<DiseaseDetectionResponse> detectDisease(
   );
 
   try {
-    final http.StreamedResponse streamedResponse =
-        await request.send().timeout(
-      const Duration(seconds: 30),
+    final streamedResponse = await request.send().timeout(
+      const Duration(seconds: 60),
     );
 
-    final http.Response response =
-        await http.Response.fromStream(
+    final response = await http.Response.fromStream(
       streamedResponse,
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data =
-          jsonDecode(response.body)
-              as Map<String, dynamic>;
+      final decoded = jsonDecode(response.body);
 
-      return DiseaseDetectionResponse.fromJson(data);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException(
+          'Invalid disease API response.',
+        );
+      }
+
+      return DiseaseDetectionResponse.fromJson(decoded);
     }
 
     throw Exception(
       'Disease API failed. '
       'HTTP ${response.statusCode}: ${response.body}',
     );
-  } on Exception {
-    rethrow;
   } catch (error) {
     if (kDebugMode) {
-      print('Disease API error: $error');
+      debugPrint('Disease API error: $error');
     }
-
-    throw Exception(
-      'Unable to connect to the disease detection API.',
-    );
+    rethrow;
   }
 }
 
@@ -1571,41 +1563,82 @@ class LocationSearchResult {
 
 class DiseaseDetectionResponse {
   final bool success;
-  final bool modelReady;
   final String message;
-  final String filename;
-  final String contentType;
-  final int imageSize;
+  final String crop;
+  final String disease;
+  final bool isHealthy;
+  final bool isPest;
+  final String part;
+  final double confidence;
+
+  final String symptoms;
+  final String causes;
+  final String fertilizer;
+  final String management;
+  final String reviewNote;
+  final String sprayNote;
+
+  final List<Map<String, dynamic>> alternatives;
 
   const DiseaseDetectionResponse({
     required this.success,
-    required this.modelReady,
     required this.message,
-    required this.filename,
-    required this.contentType,
-    required this.imageSize,
+    required this.crop,
+    required this.disease,
+    required this.isHealthy,
+    required this.isPest,
+    required this.part,
+    required this.confidence,
+    required this.symptoms,
+    required this.causes,
+    required this.fertilizer,
+    required this.management,
+    required this.reviewNote,
+    required this.sprayNote,
+    required this.alternatives,
   });
 
   factory DiseaseDetectionResponse.fromJson(
     Map<String, dynamic> json,
   ) {
+    final dynamic rawSolution = json['solution'];
+
+    final Map<String, dynamic> solution =
+        rawSolution is Map<String, dynamic>
+            ? rawSolution
+            : {};
+
+    final dynamic rawAlternatives = json['alternatives'];
+
+    final List<Map<String, dynamic>> alternatives =
+        rawAlternatives is List
+            ? rawAlternatives
+                .whereType<Map<String, dynamic>>()
+                .toList()
+            : [];
+
     return DiseaseDetectionResponse(
-      success:
-          json['success'] as bool? ?? false,
-      modelReady:
-          json['model_ready'] as bool? ?? false,
-      message:
-          json['message'] as String? ?? '',
-      filename:
-          json['filename'] as String? ?? '',
-      contentType:
-          json['content_type'] as String? ?? '',
-      imageSize:
-          (json['image_size'] as num?)
-                  ?.toInt() ??
-              0,
+      success: json['status'] == 'ok',
+      message: json['message']?.toString() ?? '',
+      crop: json['crop']?.toString() ?? '',
+      disease: json['disease']?.toString() ?? '',
+      isHealthy: json['is_healthy'] == true,
+      isPest: json['is_pest'] == true,
+      part: json['part']?.toString() ?? '',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0,
+
+      symptoms: solution['symptoms']?.toString() ?? '',
+      causes: solution['causes']?.toString() ?? '',
+      fertilizer: solution['fertilizer']?.toString() ?? '',
+      management: solution['management']?.toString() ?? '',
+      reviewNote: solution['review_note']?.toString() ?? '',
+      sprayNote: solution['spray_note']?.toString() ?? '',
+
+      alternatives: alternatives,
     );
   }
+
+  double get confidencePercentage => confidence * 100;
 }
 
 // FARM DIARY ENTRY
