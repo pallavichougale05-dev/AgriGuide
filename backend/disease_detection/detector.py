@@ -22,13 +22,6 @@ SOLUTIONS_FILE = BASE / "data" / "solutions.json"
 MOBILENET_WEIGHT = 0.40
 EFFICIENTNET_WEIGHT = 0.60
 
-# Provisional thresholds. Tune using real field images.
-MIN_CONFIDENCE = float(os.getenv("DISEASE_MIN_CONFIDENCE", "0.55"))
-MIN_MARGIN = float(os.getenv("DISEASE_MIN_MARGIN", "0.15"))
-HEALTHY_MIN_CONFIDENCE = float(
-    os.getenv("DISEASE_HEALTHY_MIN_CONFIDENCE", "0.75")
-)
-
 REVIEW_NOTE = (
     "This advice is still being reviewed by an agriculture expert. "
     "Please confirm with your local Krishi Vigyan Kendra or agriculture office "
@@ -44,13 +37,10 @@ MESSAGES = {
     "ok": "Result ready.",
     "not_confident": (
         "The image could not be identified confidently. "
-        "Please upload a clear photo of one supported crop leaf."
+        "Please upload a photo of one supported crop."
     ),
     "too_dark": "The photo is too dark. Please take it in better light.",
-    "too_small": "The photo is too small. Please use a clearer, larger photo.",
-    "too_blurry": (
-        "The image is blurry. Please upload a clear photo of one leaf."
-    ),
+    "too_small": "The photo is too small. Please use a larger photo.",
 }
 
 
@@ -117,44 +107,32 @@ class DiseaseDetector:
 
     def detect(self, data: bytes) -> dict:
         """
-        Detect one crop and one disease.
+        Predict the highest-scoring crop disease.
 
-        Returns a rejection response if the image quality or
-        prediction confidence is insufficient.
+        Blurry, dark, low-confidence and ambiguous images are
+        not rejected by this method. Image-file validation still
+        happens inside image_utils.open_image().
         """
 
         image = image_utils.open_image(data)
 
-        problem, is_blurry = image_utils.quality(image)
-
-        if problem:
-            return self._empty(problem, is_blurry)
+        _, is_blurry = image_utils.quality(image)
 
         probs = self._probabilities(
             image_utils.to_model_input(image)
         )
 
-        order = np.argsort(probs)[::-1]
-
-        best = int(order[0])
-        second = int(order[1])
-
+        best = int(np.argmax(probs))
         label = self.labels[best]
-
         top = float(probs[best])
-        margin = float(probs[best] - probs[second])
 
-        needed = (
-            HEALTHY_MIN_CONFIDENCE
-            if label["is_healthy"]
-            else MIN_CONFIDENCE
+        print(
+            f"[DISEASE DEBUG] "
+            f"Best: {label['raw']} | "
+            f"Confidence: {top:.4f} | "
+            f"Blurry: {is_blurry}"
         )
 
-        # Reject uncertain or ambiguous predictions.
-        if top < needed or margin < MIN_MARGIN:
-            return self._empty("not_confident", is_blurry)
-
-        # Return only the best prediction.
         return {
             "status": "ok",
             "message": MESSAGES["ok"],
